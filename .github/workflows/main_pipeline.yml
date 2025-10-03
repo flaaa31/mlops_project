@@ -9,6 +9,12 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch: 
+    inputs:
+      reason:
+        description: 'Motivo esecuzione manuale'
+        required: true
+        default: 'Test manuale'
 
 jobs:
   train_and_deploy:
