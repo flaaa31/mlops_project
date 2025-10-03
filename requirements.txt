@@ -4,3 +4,4 @@ pandas
 datasets 
 scikit-learn
 kagglehub
+huggingface-hub

@@ -1,0 +1,75 @@
+name: MLOps Sentiment Retraining Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  train_and_deploy:
+    runs-on: ubuntu-latest
+    
+    # Variabili di ambiente per il deploy su Hugging Face
+    env:
+      HF_USERNAME: IlTuoNomeUtenteHuggingFace
+      HF_MODEL_REPO: machineinnovators-sentiment-model
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12' 
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt # Assicurati che 'requirements.txt' sia aggiornato
+
+      # --- 1. CI: Esecuzione Test di Base (Training) ---
+      - name: Run Model Retraining (Training Job)
+        id: training
+        # Il dataset tokenizzato deve essere presente nel repo (data/processed/...)
+        run: python src/model_train.py
+        
+      # --- 2. Test di Integrazione/Valutazione ---
+      # Si presume che lo script di training abbia salvato le metriche
+      - name: Check Model Performance Threshold
+        run: |
+          METRICS_FILE="models/sentiment_retrained/metrics.json"
+          if [ -f "$METRICS_FILE" ]; then
+            ACCURACY=$(python -c "import json; f = open('$METRICS_FILE'); metrics = json.load(f); print(metrics.get('eval_accuracy', 0.0))")
+            echo "Modello addestrato con Accuracy: $ACCURACY"
+            
+            # Soglia minima di accuratezza (esempio)
+            MIN_ACCURACY=0.60 
+            if (( $(echo "$ACCURACY < $MIN_ACCURACY" | bc -l) )); then
+              echo "❌ Accuracy ($ACCURACY) è inferiore alla soglia minima ($MIN_ACCURACY)."
+              exit 1 # Fallisce il job se l'accuratezza è troppo bassa
+            fi
+            echo "✅ Accuracy accettabile. Procedo al Deploy."
+          else
+            echo "❌ File metriche non trovato."
+            exit 1
+          fi
+
+      # --- 3. CD: Deploy su Hugging Face ---
+      - name: Deploy Model to Hugging Face Hub
+        if: success() # Esegui solo se il training e il check delle metriche hanno avuto successo
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }} # Token salvato nelle Secrets di GitHub
+        run: |
+          # Installa le librerie per l'interazione con Hugging Face Hub
+          pip install huggingface_hub
+          
+          # Login al Hugging Face Hub usando il token segreto
+          python -c "from huggingface_hub import login; login(token='${HF_TOKEN}')"
+          
+          # Crea il repository (se non esiste) e carica i file del modello
+          # Nota: Il nome del repo su HF sarà 'HF_USERNAME/HF_MODEL_REPO'
+          python -c "from huggingface_hub import HfApi; api = HfApi(); api.create_repo(repo_id='${{ env.HF_MODEL_REPO }}', repo_type='model', exist_ok=True, token='${HF_TOKEN}'); api.upload_folder(folder_path='${{ env.OUTPUT_DIR }}', repo_id='${{ env.HF_USERNAME }}/${{ env.HF_MODEL_REPO }}', repo_type='model', token='${HF_TOKEN}')"
