@@ -33,7 +33,7 @@ def run_training():
         weight_decay=0.01,
         logging_dir=LOGGING_DIR,
         logging_steps=500,
-        evaluation_strategy="epoch",            # Valuta alla fine di ogni epoca
+        eval_strategy="epoch",            # Valuta alla fine di ogni epoca
         save_strategy="epoch",
         load_best_model_at_end=True,            # Carica il modello migliore
         metric_for_best_model="accuracy",       # Metric per il modello migliore
