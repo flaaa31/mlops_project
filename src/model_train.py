@@ -36,7 +36,6 @@ def run_training():
         eval_strategy="epoch",            # Valuta alla fine di ogni epoca
         save_strategy="epoch",
         load_best_model_at_end=True,            # Carica il modello migliore
-        metric_for_best_model="accuracy",       # Metric per il modello migliore
         push_to_hub=False                       # Non pushare ancora su HF
     )
 
