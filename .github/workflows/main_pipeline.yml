@@ -22,7 +22,7 @@ jobs:
     
     # Variabili di ambiente per il deploy su Hugging Face
     env:
-      HF_USERNAME: IlTuoNomeUtenteHuggingFace
+      HF_USERNAME: flaaa31
       HF_MODEL_REPO: machineinnovators-sentiment-model
       
     steps:

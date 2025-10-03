@@ -86,10 +86,10 @@ def run_training():
         weight_decay=0.01,
         logging_dir=LOGGING_DIR,
         logging_steps=500,
-        eval_strategy="epoch",                  # CORREZIONE: Usa 'eval_strategy'
+        eval_strategy="epoch",                  
         save_strategy="epoch",
         load_best_model_at_end=True,            
-        metric_for_best_model="eval_accuracy",  # Usa il nome della metrica restituita
+        metric_for_best_model="eval_accuracy",  
         push_to_hub=False                      
     )
 
