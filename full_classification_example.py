@@ -1,3 +1,6 @@
+# Example of model usage taken from 
+# https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest
+
 from transformers import AutoModelForSequenceClassification
 from transformers import TFAutoModelForSequenceClassification
 from transformers import AutoTokenizer, AutoConfig
@@ -33,9 +36,11 @@ scores = softmax(scores)
 # scores = softmax(scores)
 # Print labels and scores
 ranking = np.argsort(scores)
-ranking = ranking[::-1]
+sentiment = ranking[0]
 for i in range(scores.shape[0]):
     l = config.id2label[ranking[i]]
     s = scores[ranking[i]]
-    print(f"{i+1}) {l} {np.round(float(s), 4)}")
+print(f"Sentence: {text}")
+print(f"Sentiment: {l}, with {int(s*100)}% of confidence")
+
 

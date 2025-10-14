@@ -1,1 +1,55 @@
-.venv
+# --- ENVIRONMENTS ---
+.venv/
+venv/
+env/
+ENV/
+*.env
+
+# --- BYTECODE / CACHES ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- JUPYTER / COLAB ---
+.ipynb_checkpoints/
+*.ipynb_out/
+
+# --- TEST / COVERAGE ---
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# --- IDE / EDITOR FILES ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- BUILD / DIST / PACKAGES ---
+build/
+dist/
+*.egg-info/
+*.egg
+
+# --- MODEL / DATA FILES (optional, if you add datasets) ---
+*.pkl
+*.pt
+*.bin
+*.h5
+*.ckpt
+*.csv
+*.tsv
+*.jsonl
+data/
+models/
+outputs/
+
+# --- SYSTEM FILES ---
+.DS_Store
+Thumbs.db
+
