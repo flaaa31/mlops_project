@@ -11,3 +11,7 @@ def test_positive_sentiment():
 def test_negative_sentiment():
     result = analyzer.analyze("I hate this service.")
     assert result["label"].lower() == "negative"
+
+def test_neutral_sentiment():
+    result = analyzer.analyze("Tomorrow the sun will rise at 6:00 AM")
+    assert result["label"].lower() == "neutral"
