@@ -6,3 +6,4 @@ torch
 scipy
 numpy
 pytest
+gradio
