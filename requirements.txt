@@ -1,12 +1,15 @@
+
 fastapi
 uvicorn[standard]
 pydantic
+
 transformers
 torch
 scipy
 numpy
-pytest
 datasets
 evaluate
 scikit-learn
 accelerate
+
+pytest
