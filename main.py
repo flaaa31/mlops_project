@@ -34,7 +34,3 @@ def analyze_sentiment(request: SentimentRequest):
     """
     result = analyzer.analyze(request.text)
     return result
-
-# To run this app:
-# 1. Install dependencies: pip install -r requirements.txt
-# 2. Start the server: uvicorn main:app --reload
