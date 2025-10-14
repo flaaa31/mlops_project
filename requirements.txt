@@ -6,3 +6,7 @@ torch
 scipy
 numpy
 pytest
+datasets
+evaluate
+scikit-learn
+accelerate
