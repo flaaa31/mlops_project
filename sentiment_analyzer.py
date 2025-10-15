@@ -1,32 +1,27 @@
 # This file contains the core logic for sentiment analysis.
-import os
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoConfig
 import numpy as np
 from scipy.special import softmax
-
-# Recuperiamo le variabili d'ambiente. Se non esistono, usiamo valori di default.
-HF_USERNAME = os.getenv("HF_USERNAME", "cardiffnlp")
-REPO_NAME = os.getenv("HF_USERNAME", "twitter-roberta-base-sentiment-latest")
+import os
 
 class SentimentAnalyzer:
-    """
-    A class to load a sentiment analysis model and perform predictions.
-    The model can be loaded from a local path or the Hugging Face Hub.
-    """
-    def __init__(self, model_name: str):
+    """A class to load the sentiment analysis model and perform predictions."""
+    # CORREZIONE: Aggiungiamo un valore di default per il nome del modello.
+    # In questo modo, l'app principale sa quale modello caricare,
+    # mentre i test possono sovrascriverlo con un altro modello.
+    def __init__(self, model_name: str = "flaaa31/sentiment_model_for_hf"):
         """
-        Initializes the tokenizer and model from the given model_name.
+        Initializes the tokenizer and model.
         """
-        self.model_name = model_name
-        print(f"Attempting to load model: '{self.model_name}'...")
+        print(f"Caricamento del modello da Hugging Face Hub: '{model_name}'...")
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.config = AutoConfig.from_pretrained(self.model_name)
-            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
-            print(f"Model '{self.model_name}' loaded successfully.")
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            self.config = AutoConfig.from_pretrained(model_name)
+            self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            print(f"Modello '{model_name}' caricato con successo.")
         except Exception as e:
-            print(f"Error loading model '{self.model_name}': {e}")
-            print("Please ensure the model exists and you have the correct access rights.")
+            print(f"Errore durante il caricamento del modello: {e}")
+            print("Assicurati che il modello esista su Hugging Face Hub e che il nome sia corretto.")
             raise
 
     def preprocess(self, text: str) -> str:
@@ -53,9 +48,13 @@ class SentimentAnalyzer:
         if not text:
             return {"label": "Error", "score": 0.0, "detail": "Input text cannot be empty."}
 
+        # Preprocess the text
         processed_text = self.preprocess(text)
+
+        # Tokenize the input
         encoded_input = self.tokenizer(processed_text, return_tensors='pt')
 
+        # Get model output
         try:
             output = self.model(**encoded_input)
             scores = output[0][0].detach().numpy()
@@ -63,12 +62,13 @@ class SentimentAnalyzer:
         except Exception as e:
             return {"label": "Error", "score": 0.0, "detail": f"Model inference failed: {e}"}
 
-        ranking = np.argsort(scores)[::-1]
+        # Rank scores and get the top sentiment
+        ranking = np.argsort(scores)
+        ranking = ranking[::-1] # Reverse to get highest score first
+        
         top_sentiment_index = ranking[0]
         label = self.config.id2label[top_sentiment_index]
         score = scores[top_sentiment_index]
 
         return {"label": label, "score": float(score)}
 
-# NOTA: Abbiamo rimosso l'istanziazione globale 'analyzer = SentimentAnalyzer()'
-# da questo file. La creazione dell'istanza ora avviene in main.py.
