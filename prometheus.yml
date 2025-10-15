@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s # Ogni quanti secondi Prometheus raccoglie i dati
+
+scrape_configs:
+  - job_name: 'fastapi_app'
+    static_configs:
+      # Qui diciamo a Prometheus dove trovare la tua API.
+      # 'host.docker.internal:8000' significa: "cerca sulla macchina che ospita Docker, alla porta 8000".
+      - targets: ['host.docker.internal:8000']
