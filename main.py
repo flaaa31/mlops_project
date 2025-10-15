@@ -5,7 +5,9 @@ from pydantic import BaseModel
 from sentiment_analyzer import SentimentAnalyzer
 
 # Importiamo gli strumenti per Prometheus
-from prometheus_fastapi_instrumentator import Instrumentator, Counter
+from prometheus_fastapi_instrumentator import Instrumentator
+# CORREZIONE 1: La classe Counter va importata da prometheus_client
+from prometheus_client import Counter
 
 # --- CONFIGURAZIONE E AVVIO ---
 
@@ -21,16 +23,16 @@ analyzer = SentimentAnalyzer()
 
 # --- MONITORAGGIO CON PROMETHEUS ---
 
-# Creiamo un contatore personalizzato per le etichette di sentiment
-sentiment_counter = Counter(
-    "sentiment_analysis_predictions_total",
-    "Counts the number of predictions for each sentiment label."
-).label("label")
-
 # Applichiamo l'instrumentator all'app FastAPI
 # Questo esporrà automaticamente metriche standard (latenza, richieste, etc.)
-# e ci permetterà di usare il nostro contatore personalizzato.
 Instrumentator().instrument(app).expose(app)
+
+# CORREZIONE 2: Creiamo il contatore con la sintassi corretta per le etichette
+sentiment_counter = Counter(
+    "sentiment_analysis_predictions_total",
+    "Counts the number of predictions for each sentiment label.",
+    ["label"]  # Le etichette vanno definite come lista di stringhe
+)
 
 
 # --- MODELLI DI DATI (Pydantic) ---
@@ -61,8 +63,10 @@ def analyze_sentiment(request: SentimentRequest):
     
     # Incrementiamo il nostro contatore personalizzato con l'etichetta predetta
     if response_data.label in ["positive", "negative", "neutral"]:
-        sentiment_counter.labels(response_data.label).inc()
+        # CORREZIONE 3: Passare l'etichetta come keyword argument
+        sentiment_counter.labels(label=response_data.label).inc()
     
     return response_data
+
 
 
