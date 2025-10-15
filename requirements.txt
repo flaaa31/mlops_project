@@ -13,3 +13,5 @@ scikit-learn
 accelerate
 
 pytest
+
+prometheus-fastapi-instrumentator
