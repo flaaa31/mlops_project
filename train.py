@@ -1,112 +1,115 @@
 import os
-import numpy as np
-import evaluate
+import torch
 from datasets import load_dataset
-from transformers import (
-    AutoTokenizer,
-    AutoModelForSequenceClassification,
-    TrainingArguments,
-    Trainer,
-    DataCollatorWithPadding,
-)
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
+import numpy as np
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
-# --- 1. CONFIGURAZIONE ---
-MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+# --- FASE 1: CONFIGURAZIONE ---
+# Modello di base da cui partire
+BASE_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+# Nome del dataset da Hugging Face
 DATASET_NAME = "tweet_eval"
+# Nome della configurazione specifica del dataset
 DATASET_CONFIG = "sentiment"
-OUTPUT_DIR = "sentiment_model_for_hf" # Nome del repository su Hugging Face
-LOGGING_DIR = "./logs"
-NUM_TRAIN_EPOCHS = 1
-BATCH_SIZE = 16
+# Nome del repository dove verrà salvato il modello su Hugging Face
+REPO_NAME_ON_HUB = "sentiment_model_for_hf"
 
-def preprocess_function(examples, tokenizer):
-    """Tokenizza il testo di input."""
-    return tokenizer(examples['text'], truncation=True, padding=True)
+# Leggiamo le credenziali dai secrets di GitHub
+HF_TOKEN = os.getenv("HF_TOKEN")
+HF_USERNAME = os.getenv("HF_USERNAME")
 
-def compute_metrics(eval_pred):
-    """Calcola le metriche di accuratezza e F1."""
-    load_accuracy = evaluate.load("accuracy")
-    load_f1 = evaluate.load("f1")
-    logits, labels = eval_pred
-    predictions = np.argmax(logits, axis=-1)
-    accuracy = load_accuracy.compute(predictions=predictions, references=labels)["accuracy"]
-    f1 = load_f1.compute(predictions=predictions, references=labels, average="weighted")["f1"]
-    return {"accuracy": accuracy, "f1": f1}
+push_to_hub = bool(HF_TOKEN and HF_USERNAME)
 
+if push_to_hub:
+    repo_id = f"{HF_USERNAME}/{REPO_NAME_ON_HUB}"
+    print(f"Credenziali trovate. Il modello verrà caricato su Hugging Face Hub in '{repo_id}'.")
+else:
+    print("Variabili d'ambiente HF_TOKEN o HF_USERNAME non impostate. Salto il push sull'Hub.")
+
+
+# --- FASE 2: CARICAMENTO E PREPARAZIONE DEL DATASET ---
 def main():
-    # --- INTEGRAZIONE CON HUGGING FACE HUB ---
-    hf_token = os.getenv("HF_TOKEN")
-    hf_username = os.getenv("HF_USERNAME")
-    repo_id = f"{hf_username}/{OUTPUT_DIR}" if hf_username else None
-
-    if not hf_token or not repo_id:
-        print("Variabili d'ambiente HF_TOKEN o HF_USERNAME non impostate. Salto il push sull'Hub.")
-        push_to_hub_enabled = False
-    else:
-        print(f"Credenziali trovate. Il modello verrà caricato su Hugging Face Hub in '{repo_id}'.")
-        push_to_hub_enabled = True
-
-    # --- 2. CARICAMENTO E PREPARAZIONE DEL DATASET ---
     print(f"Caricamento del dataset '{DATASET_NAME}'...")
-    dataset = load_dataset(DATASET_NAME, DATASET_CONFIG, split='train')
-    subset = dataset.shuffle(seed=42).select(range(10000))
-    train_test_split_dataset = subset.train_test_split(test_size=0.3)
-    train_dataset = train_test_split_dataset['train']
-    eval_dataset = train_test_split_dataset['test']
-    print(f"Dataset suddiviso in {len(train_dataset)} esempi di training e {len(eval_dataset)} di valutazione.")
+    dataset = load_dataset(DATASET_NAME, DATASET_CONFIG)
 
-    # --- 3. TOKENIZZAZIONE ---
-    print(f"Caricamento del tokenizer per '{MODEL_NAME}'...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    tokenized_train_dataset = train_dataset.map(lambda ex: preprocess_function(ex, tokenizer), batched=True)
-    tokenized_eval_dataset = eval_dataset.map(lambda ex: preprocess_function(ex, tokenizer), batched=True)
-    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+    # Utilizziamo un sottoinsieme per un training più veloce
+    train_subset = dataset['train'].shuffle(seed=42).select(range(7000))
+    validation_subset = dataset['validation'].shuffle(seed=42).select(range(3000))
+    print(f"Dataset suddiviso in {len(train_subset)} esempi di training e {len(validation_subset)} di valutazione.")
 
-    # --- 4. CARICAMENTO DEL MODELLO ---
-    print(f"Caricamento del modello pre-addestrato '{MODEL_NAME}'...")
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=3)
 
-    # --- 5. TRAINING E DEPLOY ---
+    # --- FASE 3: TOKENIZZAZIONE ---
+    print(f"Caricamento del tokenizer per '{BASE_MODEL}'...")
+    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
+
+    def tokenize_function(examples):
+        return tokenizer(examples['text'], padding="max_length", truncation=True)
+
+    tokenized_train_dataset = train_subset.map(tokenize_function, batched=True)
+    tokenized_validation_dataset = validation_subset.map(tokenize_function, batched=True)
+
+
+    # --- FASE 4: CARICAMENTO DEL MODELLO E METRICHE ---
+    print(f"Caricamento del modello pre-addestrato '{BASE_MODEL}'...")
+    model = AutoModelForSequenceClassification.from_pretrained(BASE_MODEL, num_labels=3)
+
+    def compute_metrics(eval_pred):
+        logits, labels = eval_pred
+        predictions = np.argmax(logits, axis=-1)
+        precision, recall, f1, _ = precision_recall_fscore_support(labels, predictions, average='weighted')
+        acc = accuracy_score(labels, predictions)
+        return {
+            'accuracy': acc,
+            'f1': f1,
+            'precision': precision,
+            'recall': recall
+        }
+
+
+    # --- FASE 5: DEFINIZIONE DEGLI ARGOMENTI DI TRAINING ---
     print("Definizione degli argomenti di training...")
     training_args = TrainingArguments(
-        output_dir=OUTPUT_DIR,
-        learning_rate=2e-5,
-        per_device_train_batch_size=BATCH_SIZE,
-        per_device_eval_batch_size=BATCH_SIZE,
-        num_train_epochs=NUM_TRAIN_EPOCHS,
+        output_dir="logs",
+        num_train_epochs=1,
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=16,
+        warmup_steps=500,
         weight_decay=0.01,
-        evaluation_strategy="epoch",
-        save_strategy="no", # Non salva checkpoint locali per risparmiare spazio
+        logging_dir='./logs',
+        logging_steps=10,
+        eval_strategy="epoch",  # <-- CORREZIONE APPLICATA QUI
+        save_strategy="no",     # Non salviamo checkpoint in locale per risparmiare spazio
         load_best_model_at_end=True,
-        logging_dir=LOGGING_DIR,
-        push_to_hub=push_to_hub_enabled,
-        hub_model_id=repo_id,
-        hub_token=hf_token,
+        metric_for_best_model="accuracy",
+        push_to_hub=push_to_hub,
+        hub_token=HF_TOKEN,
+        hub_model_id=repo_id if push_to_hub else None
     )
 
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=tokenized_train_dataset,
-        eval_dataset=tokenized_eval_dataset,
-        tokenizer=tokenizer,
-        data_collator=data_collator,
+        eval_dataset=tokenized_validation_dataset,
         compute_metrics=compute_metrics,
+        tokenizer=tokenizer
     )
 
+
+    # --- FASE 6: TRAINING E DEPLOY ---
     print("Inizio del processo di fine-tuning...")
     trainer.train()
 
-    # --- 6. PUSH SULL'HUB ---
-    if push_to_hub_enabled:
-        print(f"Push del modello migliore su Hugging Face Hub: '{repo_id}'...")
-        trainer.push_to_hub(commit_message="End of training from CI/CD pipeline")
-        print("Push completato!")
+    if push_to_hub:
+        print(f"Upload del modello su '{repo_id}' in corso...")
+        trainer.push_to_hub()
+        print("Upload completato con successo.")
     else:
-        print("Salvataggio locale del modello (push sull'Hub disabilitato).")
-        trainer.save_model(OUTPUT_DIR)
+        print("Salvataggio del modello in locale nella cartella 'sentiment_model_for_hf'...")
+        trainer.save_model("sentiment_model_for_hf")
+        print("Modello salvato correttamente.")
 
-    print("Processo completato con successo!")
 
 if __name__ == "__main__":
     main()
