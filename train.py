@@ -35,7 +35,6 @@ def main():
 
     # Utilizziamo un sottoinsieme per un training più veloce
     train_subset = dataset['train'].shuffle(seed=42).select(range(7000))
-    # CORREZIONE: Selezioniamo 2000 esempi, ovvero l'intero set di validazione disponibile
     validation_subset = dataset['validation'].shuffle(seed=42).select(range(2000))
     print(f"Dataset suddiviso in {len(train_subset)} esempi di training e {len(validation_subset)} di valutazione.")
 
@@ -80,8 +79,9 @@ def main():
         logging_dir='./logs',
         logging_steps=10,
         eval_strategy="epoch",
-        save_strategy="no",
+        save_strategy="epoch", # <-- CORREZIONE 1: Allineata a eval_strategy
         load_best_model_at_end=True,
+        save_total_limit=1, # <-- CORREZIONE 2: Salva solo il checkpoint migliore per risparmiare spazio
         metric_for_best_model="accuracy",
         push_to_hub=push_to_hub,
         hub_token=HF_TOKEN,
@@ -114,5 +114,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
