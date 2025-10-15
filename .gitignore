@@ -2,20 +2,67 @@
 .venv/
 venv/
 env/
+ENV/
+*.env
 
 --- BYTECODE / CACHES ---
+__pycache__
 pycache/
 *.py[cod]
+*$py.class
+
+--- JUPYTER / COLAB ---
+.ipynb_checkpoints/
+*.ipynb_out/
+
+--- TEST / COVERAGE ---
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.log
 
 --- IDE / EDITOR FILES ---
 .vscode/
 .idea/
+*.swp
+*.swo
 
---- TEST / COVERAGE ---
-.pytest_cache/
+--- BUILD / DIST / PACKAGES ---
+build/
+dist/
+*.egg-info/
+*.egg
 
---- MODELLI E LOG GENERATI DAL TRAINING ---
-Fondamentale per evitare errori con file di grandi dimensioni
-sentiment_model/
+--- MODEL / DATA FILES ---
+*.pkl
+*.pt
+*.bin
+*.h5
+*.ckpt
+*.csv
+*.tsv
+*.jsonl
+data/
+models/
+outputs/
+
+--- PROJECT SPECIFIC OUTPUTS ---
 sentiment_model_for_hf/
 logs/
+predictions_log.csv
+
+--- DOCKER ---
+Ignora i file di override locali di Docker Compose e le cartelle di dati
+se non si usano i named volumes.
+docker-compose.override.yml
+.docker/
+prometheus_data/
+grafana_data/
+
+--- SYSTEM FILES ---
+.DS_Store
+Thumbs.db
