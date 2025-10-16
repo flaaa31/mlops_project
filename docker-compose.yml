@@ -1,6 +1,6 @@
 version: '3.8'
 
-# Definiamo i nostri "hard disk esterni"
+# Definining our "external hard disk"
 volumes:
   prometheus_data: {}
   grafana_data: {}
@@ -10,9 +10,9 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      # Colleghiamo la configurazione
+      # Connecting configuration
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      # Colleghiamo l'hard disk per i dati
+      # Connecting hard disk for data
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -23,7 +23,7 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     volumes:
-      # Colleghiamo l'hard disk per le dashboard e le impostazioni
+      # Connecting hard disk for dashboard and settings 
       - grafana_data:/var/lib/grafana
     ports:
       - "3000:3000"
