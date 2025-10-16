@@ -6,13 +6,9 @@ import numpy as np
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 # CONFIGURATION
-# Starting from a based model
 BASE_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-# Hugging Face dataset
 DATASET_NAME = "tweet_eval"
-# dataset configuration
 DATASET_CONFIG = "sentiment"
-# Hugging Face repository
 HF_REPO = "sentiment_model_for_hf"
 
 # HF Credentials
@@ -20,7 +16,7 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 HF_USERNAME = os.getenv("HF_USERNAME")
 
 push_to_hub_flag = bool(HF_TOKEN and HF_USERNAME)
-
+repo_id = None
 if push_to_hub_flag:
     repo_id = f"{HF_USERNAME}/{HF_REPO}"
     print(f"Credentials confirmed. The model will be loaded on Hugging Face Hub in '{repo_id}'.")
@@ -28,18 +24,18 @@ else:
     print("HF_TOKEN or HF_USERNAME not found. There will be no HF Hub push.")
 
 
-# DATASET PREPARATION AND LOADING
 def main():
     print(f"Loading dataset '{DATASET_NAME}'...")
     dataset = load_dataset(DATASET_NAME, DATASET_CONFIG)
 
-    # using a subset for faster training 
-    train_subset = dataset['train'].shuffle(seed=42).select(range(7000))
-    validation_subset = dataset['validation'].shuffle(seed=42).select(range(2000))
+    # --- MIGLIORAMENTO 1: AUMENTIAMO I DATI DI TRAINING ---
+    # Usiamo un subset più grande per migliorare l'apprendimento del modello.
+    # Passiamo da 7.000 a 20.000 esempi.
+    train_subset = dataset['train'].shuffle(seed=42).select(range(20000))
+    # Usiamo l'intero set di validazione per una valutazione più robusta.
+    validation_subset = dataset['validation'] 
     print(f"Dataset divided in {len(train_subset)} training examples and {len(validation_subset)} validation examples.")
 
-
-    # TOKENIZATION 
     print(f"Loading '{BASE_MODEL}' tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
 
@@ -49,8 +45,6 @@ def main():
     tokenized_train_dataset = train_subset.map(tokenize_function, batched=True)
     tokenized_validation_dataset = validation_subset.map(tokenize_function, batched=True)
 
-
-    # LOADING MODEL AND METRICS
     print(f"Loading pre-trained model '{BASE_MODEL}'...")
     model = AutoModelForSequenceClassification.from_pretrained(BASE_MODEL, num_labels=3)
 
@@ -66,11 +60,11 @@ def main():
             'recall': recall
         }
 
-
-    # Training args
     training_args = TrainingArguments(
         output_dir="logs",
-        num_train_epochs=1,
+        # --- MIGLIORAMENTO 2: AUMENTIAMO LE EPOCHE DI TRAINING ---
+        # Passiamo da 1 a 3 epoche per permettere al modello di apprendere più a fondo.
+        num_train_epochs=3,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
         warmup_steps=500,
@@ -80,10 +74,9 @@ def main():
         eval_strategy="epoch",
         save_strategy="epoch", 
         load_best_model_at_end=True,
-        save_total_limit=1, # saves only the best checkpoint to save space from disk
+        save_total_limit=1,
         metric_for_best_model="accuracy",
-        # --- CORREZIONE QUI ---
-        push_to_hub=push_to_hub_flag, # Il parametro corretto è 'push_to_hub'
+        push_to_hub=push_to_hub_flag,
         hub_token=HF_TOKEN,
         hub_model_id=repo_id if push_to_hub_flag else None
     )
@@ -97,8 +90,6 @@ def main():
         tokenizer=tokenizer
     )
 
-
-    # TRAINING AND DEPLOY
     trainer.train()
 
     if push_to_hub_flag:
