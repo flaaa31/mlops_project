@@ -1,30 +1,56 @@
-# Monitoraggio della reputazione online di un’azienda
-MachineInnovators Inc. è leader nello sviluppo di applicazioni di machine learning scalabili e pronte per la produzione. Il focus principale del progetto è integrare metodologie MLOps per facilitare lo sviluppo, l'implementazione, il monitoraggio continuo e il retraining dei modelli di analisi del sentiment. L'obiettivo è abilitare l'azienda a migliorare e monitorare la reputazione sui social media attraverso l'analisi automatica dei sentiment.
+# Online Reputation Monitoring
 
-Le aziende si trovano spesso a fronteggiare la sfida di gestire e migliorare la propria reputazione sui social media in modo efficace e tempestivo. Monitorare manualmente i sentiment degli utenti può essere inefficiente e soggetto a errori umani, mentre la necessità di rispondere rapidamente ai cambiamenti nel sentiment degli utenti è cruciale per mantenere un'immagine positiva dell'azienda.
+This repository contains the source code for a complete MLOps project aimed at monitoring a company's online reputation through automated sentiment analysis of social media data.
+The system implements an automated CI/CD pipeline that handles testing, fine-tuning of a RoBERTa model, and its deployment to the Hugging Face Hub. 
+The final application is served via a FastAPI API, featuring an interactive user interface and a real-time monitoring system based on Prometheus and Grafana.
 
-**Benefici della Soluzione**
+## Local Execution Guide
+To run the entire system in a local development environment (or a Codespace), follow these steps.
 
-Automazione dell'Analisi del sentiment: Implementando un modello di analisi del sentiment basato su FastText, MLOps Innovators Inc. automatizzerà l'elaborazione dei dati dai social media per identificare sentiment positivi, neutrali e negativi. Ciò permetterà una risposta rapida e mirata ai feedback degli utenti.
-Monitoraggio Continuo della Reputazione: Utilizzando metodologie MLOps, l'azienda implementerà un sistema di monitoraggio continuo per valutare l'andamento del sentiment degli utenti nel tempo. Questo consentirà di rilevare rapidamente cambiamenti nella percezione dell'azienda e di intervenire prontamente se necessario.
-Retraining del Modello: Introdurre un sistema di retraining automatico per il modello di analisi del sentiment assicurerà che l'algoritmo si adatti dinamicamente ai nuovi dati e alle variazioni nel linguaggio e nei comportamenti degli utenti sui social media. Mantenere alta l'accuratezza predittiva del modello è essenziale per una valutazione corretta del sentiment.
-Dettagli del Progetto
+### Prerequisites
+- Python 3.10+
+- Docker and Docker Compose installed and running.
 
-**Fase 1: Implementazione del Modello di Analisi del sentiment**
-Modello: Utilizzare un modello pre-addestrato per un’analisi del sentiment in grado di classificare testi dai social media in sentiment positivo, neutro o negativo. Servirsi di questo modello: https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest  
-Dataset: Utilizzare dataset pubblici contenenti testi e le rispettive etichette di sentiment.
+### 1. Python Environment Setup
+Create and activate a virtual environment, then install the necessary dependencies.
 
-**Fase 2: Creazione della Pipeline CI/CD**  
-Sviluppare una pipeline automatizzata per il training del modello, i test di integrazione e il deploy dell'applicazione su HuggingFace.
+```py
+# Create the virtual environment (name may change)
+python3 -m venv .venv
 
-**Fase 3: Deploy e Monitoraggio Continuo**
-Deploy su HuggingFace (facoltativo): Implementare il modello di analisi del sentiment, inclusi dati e applicazione, su HuggingFace per facilitare l'integrazione e la scalabilità.
-Sistema di Monitoraggio: Configurare un sistema di monitoraggio per valutare continuamente le performance del modello e il sentiment rilevato.
+# Activate the environment (on Linux/macOS)
+source .venv/bin/activate
+# .venv/scripts/activate (on Windows)
 
-**Consegna**  
-Codice Sorgente: Repository pubblica su GitHub con codice ben documentato per la pipeline CI/CD e l'implementazione del modello. La consegna vera e propria dovrà avvenire mediante un notebook google colab con al suo interno il link al repository GitHub.
+# Install the optimized dependencies
+pip install -r requirements.txt
+```
 
-Documentazione: Descrizione delle scelte progettuali, delle implementazioni e dei risultati ottenuti durante il progetto.
-Motivazione del Progetto
+### 2. Launch the FastAPI API
+In a terminal, start the Uvicorn application. 
 
-L'implementazione di RoBERTa per l'analisi del sentiment consente a MLOps Innovators Inc. di migliorare significativamente la gestione della reputazione sui social media. Automatizzando l'analisi del sentiment, l'azienda potrà rispondere più rapidamente alle esigenze degli utenti, migliorando la soddisfazione e rafforzando l'immagine dell'azienda sul mercato. Con questo progetto, MLOps Innovators Inc. promuove l'innovazione nel campo delle tecnologie AI, offrendo soluzioni avanzate e scalabili per le sfide moderne di gestione della reputazione aziendale.
+```bash
+uvicorn main.app --reload --host 0.0.0.0
+```
+**It is crucial to use** ```--host 0.0.0.0 ```
+to allow Prometheus (running in Docker) to communicate with the API.
+
+The API will be accessible at ```http://127.0.0.1:8000```.
+
+### 3. Launch the Monitoring System
+In a second terminal, start the Prometheus and Grafana containers.
+```bash
+docker-compose up -d
+```
+
+- Prometheus will be available at ```http://localhost:9090```.
+- Grafana will be available at ```http://localhost:3000``` (default credentials: ```admin``` / ```admin```).
+### Project Structure
+- ```main.py```: The main file defining the FastAPI application and the user interface.
+- ```sentiment_analyzer.py```: Contains the logic for loading the model and performing sentiment analysis.
+- ```train.py```: Script for fine-tuning the model and deploying it to the Hugging Face Hub.
+- ```tests/```: Contains unit tests for the sentiment analyzer.
+- ```.github/workflows/ci-cd.yml```: Defines the CI/CD pipeline using GitHub Actions.
+- ```docker-compose.yml```: Configuration to launch Prometheus and Grafana.
+- ```prometheus.yml```: Configuration file for Prometheus. 
+- ```PROJECT_DOCUMENTATION.md```: Detailed project documentation.
