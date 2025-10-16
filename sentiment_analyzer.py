@@ -2,7 +2,6 @@
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoConfig
 import numpy as np
 from scipy.special import softmax
-import os
 
 class SentimentAnalyzer:
     """A class to load the sentiment analysis model and perform predictions."""

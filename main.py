@@ -1,33 +1,31 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-# Importiamo la classe, non l'istanza
+# Importing the class created
 from sentiment_analyzer import SentimentAnalyzer
 
-# Importiamo gli strumenti per Prometheus
+# Prometheus tools
 from prometheus_fastapi_instrumentator import Instrumentator
-# CORREZIONE 1: La classe Counter va importata da prometheus_client
 from prometheus_client import Counter
 
-# --- CONFIGURAZIONE E AVVIO ---
+# CONFIGURATION
 
-# Creiamo l'app FastAPI
+# FastAPI app creation
 app = FastAPI(
     title="Sentiment Analysis API",
     description="An API to analyze the sentiment of text using a RoBERTa model.",
     version="1.0.0"
 )
 
-# Creiamo l'istanza dell'analizzatore all'avvio dell'applicazione
+# Analyzer instance creation when application starts
 analyzer = SentimentAnalyzer()
 
-# --- MONITORAGGIO CON PROMETHEUS ---
+# ROMETHEUS MONITORING
 
-# Applichiamo l'instrumentator all'app FastAPI
-# Questo esporrà automaticamente metriche standard (latenza, richieste, etc.)
+# Applying the instrumentator to Applichiamo FastAPI app, in order to expose standard metrics (latency, requests ecc...)
 Instrumentator().instrument(app).expose(app)
 
-# CORREZIONE 2: Creiamo il contatore con la sintassi corretta per le etichette
+# Creating the counter
 sentiment_counter = Counter(
     "sentiment_analysis_predictions_total",
     "Counts the number of predictions for each sentiment label.",
@@ -35,7 +33,7 @@ sentiment_counter = Counter(
 )
 
 
-# --- MODELLI DI DATI (Pydantic) ---
+# DATA MODELS (Pydantic)
 
 class SentimentRequest(BaseModel):
     text: str
@@ -45,25 +43,25 @@ class SentimentResponse(BaseModel):
     score: float
 
 
-# --- ENDPOINTS DELL'API ---
+# API ENDPOINT
 
 @app.get("/", tags=["Health Check"])
 def read_root():
-    """Endpoint principale per verificare lo stato dell'API."""
+    """Main endpoint to check API status."""
     return {"status": "ok", "message": "Welcome to the Sentiment Analysis API!"}
 
 @app.post("/analyze", response_model=SentimentResponse, tags=["Analysis"])
 def analyze_sentiment(request: SentimentRequest):
     """
-    Analizza il sentiment del testo fornito e aggiorna le metriche di Prometheus.
+    Analzyzes sentiment of the given text and updates Prometheus metrics.
     """
     result = analyzer.analyze(request.text)
     
     response_data = SentimentResponse(label=result.get("label"), score=result.get("score"))
     
-    # Incrementiamo il nostro contatore personalizzato con l'etichetta predetta
+    # Increasing our personalized counter 
     if response_data.label in ["positive", "negative", "neutral"]:
-        # CORREZIONE 3: Passare l'etichetta come keyword argument
+        
         sentiment_counter.labels(label=response_data.label).inc()
     
     return response_data
