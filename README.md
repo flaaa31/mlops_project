@@ -30,7 +30,7 @@ pip install -r requirements.txt
 In a terminal, start the Uvicorn application. 
 
 ```bash
-uvicorn main.app --reload --host 0.0.0.0
+uvicorn main:app --reload --host 0.0.0.0
 ```
 **It is crucial to use** ```--host 0.0.0.0 ```
 to allow Prometheus (running in Docker) to communicate with the API.

@@ -9,99 +9,118 @@ from sentiment_analyzer import SentimentAnalyzer
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter
 
-# --- HTML/CSS/JS per l'Interfaccia Utente ---
-# Abbiamo inserito tutto qui per mantenere il progetto in un unico file.
-# Usiamo Tailwind CSS per uno stile moderno senza file CSS esterni.
+# --- HTML/CSS/JS for the Product Review Interface ---
 HTML_CONTENT = """
 <!DOCTYPE html>
-<html lang="it" class="h-full">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentiment Analysis API</title>
+    <title>Product Review</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
         @import url('https://rsms.me/inter/inter.css');
-        .sentiment-positive { color: #22c55e; } /* Verde */
-        .sentiment-negative { color: #ef4444; } /* Rosso */
-        .sentiment-neutral { color: #6b7280; }  /* Grigio */
+        .response-positive { color: #22c55e; } /* Green */
+        .response-negative { color: #ef4444; } /* Red */
+        .response-neutral { color: #9ca3af; }  /* Gray */
     </style>
 </head>
-<body class="bg-gray-900 text-white h-full flex items-center justify-center">
+<body class="bg-gray-900 text-white h-full flex items-center justify-center p-4">
 
     <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-2xl text-center">
-        <h1 class="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300">Sentiment Analysis API</h1>
-        <p class="text-gray-400 mb-6">Analizza il sentiment di un testo in tempo reale usando un modello RoBERTa.</p>
+        <h1 class="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Leave a Review</h1>
+        <p class="text-gray-400 mb-6">Your feedback is important to us. Let us know how we did!</p>
         
         <div>
             <textarea id="textInput" 
-                      rows="4"
-                      class="w-full p-4 bg-gray-700 border-2 border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition resize-none" 
-                      placeholder="Scrivi una frase qui... (es. 'I love this product, it's amazing!')"></textarea>
+                      rows="5"
+                      class="w-full p-4 bg-gray-700 border-2 border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition resize-none" 
+                      placeholder="Write your review here... (e.g., 'I love this product, it's amazing!')"></textarea>
             
             <button type="button" 
-                    id="analyzeButton"
-                    class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
-                Analizza Sentiment
+                    id="submitButton"
+                    class="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+                Submit Review
             </button>
         </div>
 
-        <div id="result" class="mt-6 text-2xl font-semibold min-h-[32px]">
-            <!-- Il risultato apparirà qui -->
+        <div id="response" class="mt-6 text-xl font-medium min-h-[56px] flex items-center justify-center">
+            <!-- The contextual response will appear here -->
         </div>
     </div>
 
     <script>
         const textInput = document.getElementById('textInput');
-        const resultDiv = document.getElementById('result');
-        const analyzeButton = document.getElementById('analyzeButton');
+        const responseDiv = document.getElementById('response');
+        const submitButton = document.getElementById('submitButton');
 
-        analyzeButton.addEventListener('click', async () => {
+        submitButton.addEventListener('click', async () => {
             const text = textInput.value;
             if (!text.trim()) {
-                resultDiv.innerHTML = '<span class="text-yellow-400">Per favore, inserisci del testo.</span>';
+                responseDiv.innerHTML = '<span class="text-yellow-400">Please enter your review before submitting.</span>';
                 return;
             }
 
-            analyzeButton.disabled = true;
-            analyzeButton.textContent = 'Analizzando...';
-            resultDiv.innerHTML = '';
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+            responseDiv.innerHTML = '';
 
             try {
-                const response = await fetch('/analyze', {
+                const apiResponse = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: text })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Errore HTTP: ${response.status}`);
+                if (!apiResponse.ok) {
+                    throw new Error(`HTTP Error: ${apiResponse.status}`);
                 }
 
-                const data = await response.json();
+                const data = await apiResponse.json();
                 
-                const scorePercentage = (data.score * 100).toFixed(1);
-                const sentimentClass = `sentiment-${data.label.toLowerCase()}`;
+                let responseMessage = '';
+                let responseClass = '';
+
+                // Generate a contextual response based on the sentiment
+                switch (data.label.toLowerCase()) {
+                    case 'positive':
+                        responseMessage = "Thank you so much for your positive feedback! We're thrilled you enjoyed our product.";
+                        responseClass = 'response-positive';
+                        break;
+                    case 'negative':
+                        responseMessage = "We are very sorry to hear you had a negative experience. We appreciate your feedback and will use it to improve.";
+                        responseClass = 'response-negative';
+                        break;
+                    case 'neutral':
+                        responseMessage = "Thank you for your time. Your review has been recorded.";
+                        responseClass = 'response-neutral';
+                        break;
+                    default: // Should not happen, but as a fallback
+                        responseMessage = "Thank you for your feedback.";
+                        responseClass = 'text-gray-400';
+                }
                 
-                resultDiv.innerHTML = `Sentiment: <span class="${sentimentClass}">${data.label}</span> (${scorePercentage}%)`;
+                responseDiv.innerHTML = `<p class="${responseClass}">${responseMessage}</p>`;
+                textInput.value = ''; // Clear the textarea after submission
 
             } catch (error) {
-                // CORREZIONE QUI: Usiamo una stringa semplice senza caratteri speciali.
                 console.error('Analysis error:', error);
-                resultDiv.innerHTML = '<span class="text-red-500">An error occurred. Please try again.</span>';
+                responseDiv.innerHTML = '<span class="text-red-500">An error occurred. Please try again.</span>';
             } finally {
-                analyzeButton.disabled = false;
-                analyzeButton.textContent = 'Analizza Sentiment';
+                // Restore the button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Review';
             }
         });
 
         textInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                analyzeButton.click();
+                submitButton.click();
             }
         });
     </script>
@@ -109,13 +128,15 @@ HTML_CONTENT = """
 </html>
 """
 
+# --- BACKEND CONFIGURATION (Remains the same) ---
+
 # CONFIGURATION
 app = FastAPI(
     title="Sentiment Analysis API",
     description="An API to analyze the sentiment of text using a RoBERTa model.",
     version="1.0.0",
-    docs_url="/docs", # Manteniamo /docs per la documentazione tecnica
-    redoc_url=None # Disabilitiamo l'altra interfaccia di documentazione per pulizia
+    docs_url="/docs",
+    redoc_url=None
 )
 
 # Analyzer instance creation when application starts
@@ -140,13 +161,14 @@ class SentimentResponse(BaseModel):
 # API ENDPOINTS
 @app.get("/", response_class=HTMLResponse, tags=["User Interface"])
 async def read_root():
-    """Serve la pagina HTML interattiva come interfaccia utente principale."""
+    """Serves the interactive HTML user interface."""
     return HTML_CONTENT
 
 @app.post("/analyze", response_model=SentimentResponse, tags=["Analysis"])
 def analyze_sentiment(request: SentimentRequest):
     """
-    Analizza il sentiment del testo fornito e aggiorna le metriche di Prometheus.
+    Analyzes the sentiment of the provided text and updates Prometheus metrics.
+    This endpoint is used by the frontend UI.
     """
     result = analyzer.analyze(request.text)
     response_data = SentimentResponse(label=result.get("label"), score=result.get("score"))
@@ -155,6 +177,4 @@ def analyze_sentiment(request: SentimentRequest):
         sentiment_counter.labels(label=response_data.label).inc()
     
     return response_data
-
-
 
