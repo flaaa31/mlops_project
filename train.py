@@ -19,9 +19,9 @@ HF_REPO = "sentiment_model_for_hf"
 HF_TOKEN = os.getenv("HF_TOKEN")
 HF_USERNAME = os.getenv("HF_USERNAME")
 
-push_to_hf = bool(HF_TOKEN and HF_USERNAME)
+push_to_hub_flag = bool(HF_TOKEN and HF_USERNAME)
 
-if push_to_hf:
+if push_to_hub_flag:
     repo_id = f"{HF_USERNAME}/{HF_REPO}"
     print(f"Credentials confirmed. The model will be loaded on Hugging Face Hub in '{repo_id}'.")
 else:
@@ -82,9 +82,10 @@ def main():
         load_best_model_at_end=True,
         save_total_limit=1, # saves only the best checkpoint to save space from disk
         metric_for_best_model="accuracy",
-        push_to_hf=push_to_hf,
+        # --- CORREZIONE QUI ---
+        push_to_hub=push_to_hub_flag, # Il parametro corretto è 'push_to_hub'
         hub_token=HF_TOKEN,
-        hub_model_id=repo_id if push_to_hf else None
+        hub_model_id=repo_id if push_to_hub_flag else None
     )
 
     trainer = Trainer(
@@ -100,9 +101,9 @@ def main():
     # TRAINING AND DEPLOY
     trainer.train()
 
-    if push_to_hf:
+    if push_to_hub_flag:
         print(f"Uploading model on '{repo_id}'...")
-        trainer.push_to_hf()
+        trainer.push_to_hub()
         print("Uploading completed")
     else:
         print("Saving model on 'sentiment_model_for_hf' folder...")
