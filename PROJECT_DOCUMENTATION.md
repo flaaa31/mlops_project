@@ -57,5 +57,5 @@ The project was successfully completed across three main phases:
     The project successfully achieved its objectives, resulting in a complete, end-to-end MLOps system.
     - Fine-Tuned Model: A specialized version of RoBERTa for sentiment analysis is versioned and available on the Hugging Face Hub.
     - Automated Pipeline: A fully automated CI/CD workflow ensures that every code change is tested and that the model is consistently retrained and published.
-    - Interactive API: The final application provides not just a machine-readable API but also an intuitive web interface for human users.
-    - Monitoring Dashboard: A Grafana dashboard provides real-time insights into both the API's performance (latency, throughput) and the model's predictions (sentiment distribution), offering a powerful tool for reputation monitoring.
+    - Interactive API: The final application provides an intuitive web interface for human users.
+    - Monitoring Dashboard: A Grafana dashboard provides real-time insights into both the API's performance (latency, throughput) and the model's predictions (sentiment distribution).
