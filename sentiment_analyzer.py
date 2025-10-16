@@ -1,4 +1,4 @@
-# This file contains the core logic for sentiment analysis.
+# Core logic for sentiment analysis.
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoConfig
 import numpy as np
 from scipy.special import softmax
@@ -6,27 +6,25 @@ import os
 
 class SentimentAnalyzer:
     """A class to load the sentiment analysis model and perform predictions."""
-    # CORREZIONE: Aggiungiamo un valore di default per il nome del modello.
-    # In questo modo, l'app principale sa quale modello caricare,
-    # mentre i test possono sovrascriverlo con un altro modello.
+
     def __init__(self, model_name: str = "flaaa31/sentiment_model_for_hf"):
         """
-        Initializes the tokenizer and model.
+        Initializes the tokenizer and the model.
         """
-        print(f"Caricamento del modello da Hugging Face Hub: '{model_name}'...")
+        print(f"Loading model from Hugging Face Hub: '{model_name}'...")
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.config = AutoConfig.from_pretrained(model_name)
             self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            print(f"Modello '{model_name}' caricato con successo.")
+            print(f"Model '{model_name}' loaded.")
         except Exception as e:
-            print(f"Errore durante il caricamento del modello: {e}")
-            print("Assicurati che il modello esista su Hugging Face Hub e che il nome sia corretto.")
+            print(f"Error in model loading: {e}")
+            print("Check model name on Hugging Face Hub.")
             raise
 
     def preprocess(self, text: str) -> str:
         """
-        Preprocesses the text by replacing user mentions and URLs.
+        Preprocesses the text by replacing user mentions (@) and URLs.
         """
         new_text = []
         for t in text.split(" "):
