@@ -9,7 +9,7 @@ from sentiment_analyzer import SentimentAnalyzer
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter
 
-# --- HTML/CSS/JS for the Product Review Interface ---
+# HTML/CSS/JS for the Product Review Interface [vibe coded because I'm not a developer :')]
 HTML_CONTENT = """
 <!DOCTYPE html>
 <html lang="en" class="h-full">
@@ -128,7 +128,7 @@ HTML_CONTENT = """
 </html>
 """
 
-# --- BACKEND CONFIGURATION (Remains the same) ---
+# BACKEND CONFIGURATION
 
 # CONFIGURATION
 app = FastAPI(
