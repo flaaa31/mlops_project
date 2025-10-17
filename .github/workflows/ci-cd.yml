@@ -1,26 +1,23 @@
 name: MLOps CI/CD Pipeline
 
 on:
-  # 1. Trigger per i TEST VELOCI (Continuous Integration)
-  #    Si attiva a ogni push o pull request sul branch main.
+  # Trigger for fast tests (Continuous Integration)
+  # Activates at every pysh or pull request on main branch
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-  # 2. Trigger per il TRAINING PESANTE (Manuale)
-  #    Permette di avviare l'intera pipeline manualmente dalla tab "Actions" di GitHub.
+  #  Manual trigger for fine tuning
   workflow_dispatch:
 
-  # 3. Trigger per il TRAINING PESANTE (Schedulato)
-  #    Avvia l'intera pipeline automaticamente una volta a settimana.
+  # Scheduled Trigger for fine tuning once a week
   schedule:
-    # Esegue ogni Domenica alle 02:00 UTC (formato CRON)
+    # Every Sunday at 02:00 UTC
     - cron: '0 2 * * 0'
 
 jobs:
-  # --- JOB 1: TEST VELOCI ---
-  # Questo job viene eseguito SEMPRE, ad ogni push e pull request.
+  # job 1: tests with pytest
   test:
     runs-on: ubuntu-latest
     steps:
@@ -37,13 +34,10 @@ jobs:
       - name: Run tests
         run: python -m pytest -v
 
-  # --- JOB 2: TRAINING E DEPLOY PESANTE ---
-  # Questo job viene eseguito SOLO se triggerato manualmente o schedulato,
-  # e solo se i test hanno avuto successo.
+  # job 2: fine tuning (only if job 1 succeded)
   train-and-deploy:
-    # CONDIZIONE: Esegui questo job solo se il trigger è 'workflow_dispatch' o 'schedule'
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-    needs: test # Dipende dal successo del job di test
+    needs: test # it needs that job 1 works
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
