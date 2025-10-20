@@ -1,4 +1,4 @@
-# Core logic for sentiment analysis.
+# Core logic for sentiment analysis -> to do: adding more comments and docstrings
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, AutoConfig
 import numpy as np
 from scipy.special import softmax
