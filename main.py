@@ -2,14 +2,16 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 
-# Importing the class created
+# Importing the custom class that handles model logic
 from sentiment_analyzer import SentimentAnalyzer
 
 # Prometheus tools
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter
 
-# HTML/CSS/JS for the Product Review Interface [vibe coded because I'm not a developer :')]
+# --- HTML/CSS/JS for the Product Review Interface ---
+# This string contains a full, self-contained frontend.
+# It uses TailwindCSS for styling and vanilla JavaScript for interactivity.
 HTML_CONTENT = """
 <!DOCTYPE html>
 <html lang="en" class="h-full">
@@ -130,27 +132,36 @@ HTML_CONTENT = """
 
 # BACKEND CONFIGURATION
 
-# CONFIGURATION
+# Initialize the FastAPI application
 app = FastAPI(
     title="Sentiment Analysis API",
     description="An API to analyze the sentiment of text using a RoBERTa model.",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url=None
+    docs_url="/docs", # URL for Swagger UI
+    redoc_url=None  # Disable Redoc
 )
 
-# Analyzer instance creation when application starts
+# Instantiate the analyzer.
+# the model is loaded once at startup, not on every request.
 analyzer = SentimentAnalyzer()
 
 # PROMETHEUS MONITORING
+
+# Instrument the FastAPI app with standard Prometheus metrics (latency, requests_total)
+# This also exposes the /metrics endpoint automatically
 Instrumentator().instrument(app).expose(app)
+
+# Define a custom Prometheus metric
+# We want to count the *number* of predictions for each sentiment label.
 sentiment_counter = Counter(
     "sentiment_analysis_predictions_total",
     "Counts the number of predictions for each sentiment label.",
     ["label"]
 )
 
-# DATA MODELS (Pydantic)
+# DATA MODELS
+
+# Pydantic models define the expected request and response data structures, providing automatic data validation and serialization.
 class SentimentRequest(BaseModel):
     text: str
 
@@ -167,14 +178,28 @@ async def read_root():
 @app.post("/analyze", response_model=SentimentResponse, tags=["Analysis"])
 def analyze_sentiment(request: SentimentRequest):
     """
-    Analyzes the sentiment of the provided text and updates Prometheus metrics.
-    This endpoint is used by the frontend UI.
+    Analyzes the sentiment of the provided text.
+
+    This is the core functional endpoint. It receives text,
+    uses the `SentimentAnalyzer` instance to get a prediction,
+    updates the Prometheus counter, and returns the result.
+
+    Args:
+        request (SentimentRequest): The incoming request body, validated by Pydantic.
+
+    Returns:
+        SentimentResponse: A JSON object with the predicted 'label' and 'score'.
     """
+    # Get the prediction from the analyzer
     result = analyzer.analyze(request.text)
+    
+    # Format the result into the Pydantic response model
     response_data = SentimentResponse(label=result.get("label"), score=result.get("score"))
     
+    # Increment the custom Prometheus counter based on the predicted label
     if response_data.label in ["positive", "negative", "neutral"]:
         sentiment_counter.labels(label=response_data.label).inc()
-    
+        
+    # Return the response (FastAPI handles JSON serialization)
     return response_data
 
