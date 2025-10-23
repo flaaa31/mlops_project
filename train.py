@@ -28,11 +28,11 @@ def main():
     print(f"Loading dataset '{DATASET_NAME}'...")
     dataset = load_dataset(DATASET_NAME, DATASET_CONFIG)
 
-    # --- MIGLIORAMENTO 1: AUMENTIAMO I DATI DI TRAINING ---
-    # Usiamo un subset più grande per migliorare l'apprendimento del modello.
-    # Passiamo da 7.000 a 20.000 esempi.
+
+    # Subset of 20.000 examples for train
     train_subset = dataset['train'].shuffle(seed=42).select(range(20000))
-    # Usiamo l'intero set di validazione per una valutazione più robusta.
+    
+    # entire validation dataset
     validation_subset = dataset['validation'] 
     print(f"Dataset divided in {len(train_subset)} training examples and {len(validation_subset)} validation examples.")
 
@@ -62,8 +62,7 @@ def main():
 
     training_args = TrainingArguments(
         output_dir="logs",
-        # --- MIGLIORAMENTO 2: AUMENTIAMO LE EPOCHE DI TRAINING ---
-        # Passiamo da 1 a 3 epoche per permettere al modello di apprendere più a fondo.
+
         num_train_epochs=3,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
