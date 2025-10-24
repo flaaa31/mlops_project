@@ -7,7 +7,13 @@ import numpy as np
 from scipy.special import softmax
 
 class SentimentAnalyzer:
-    """A class to load the sentiment analysis model and perform predictions."""
+    """
+    A class to load the sentiment analysis model and perform predictions.
+    
+    This class abstracts all an-model interaction, including loading the
+    model from the Hugging Face Hub, preprocessing text to match the model's
+    training format, and running the inference.
+    """
 
     def __init__(self, model_name: str = "flaaa31/sentiment_model_for_hf"):
 
@@ -16,20 +22,31 @@ class SentimentAnalyzer:
 
         This constructor is responsible for downloading and loading the pre-trained
         RoBERTa model and its corresponding tokenizer from the Hugging Face Hub.
+        This operation is I/O and compute-heavy, and is intended to be run
+        only once when the application starts.
 
         Args:
-            model_name (str): The identifier of the model on the Hugging Face Hub.
+            model_name (str): The identifier of the model on the Hugging Face Hub
+                              (e.g., 'username/repo_name').
+        
+        Raises:
+            Exception: If the model, tokenizer, or config cannot be loaded from
+                       the Hugging Face Hub (e.g., model not found, no internet).
         """
 
         print(f"Loading model from Hugging Face Hub: '{model_name}'...")
         try:
             # loading tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            
             # loading model configuration file
             self.config = AutoConfig.from_pretrained(model_name)
+            
             # loading the pre-trained model weights for sequence classification
             self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            
             print(f"Model '{model_name}' loaded.")
+            
         except Exception as e:
             print(f"Error in model loading: {e}")
             print("Check model name on Hugging Face Hub.")
