@@ -6,101 +6,149 @@ import numpy as np
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 # CONFIGURATION
+# Base model from Hugging Face Hub to fine-tune
 BASE_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+# Dataset from Hugging Face Hub
 DATASET_NAME = "tweet_eval"
+# Specific configuration of the dataset (sentiment analysis task)
 DATASET_CONFIG = "sentiment"
+# Name of the repository to create/update on Hugging Face Hub
 HF_REPO = "sentiment_model_for_hf"
 
-# HF Credentials
+# HF CREDENTIALS
 HF_TOKEN = os.getenv("HF_TOKEN")
 HF_USERNAME = os.getenv("HF_USERNAME")
 
+# Flag to control whether to push to the Hub or save locally
 push_to_hub_flag = bool(HF_TOKEN and HF_USERNAME)
-repo_id = None
+repo_id = None 
+
 if push_to_hub_flag:
     repo_id = f"{HF_USERNAME}/{HF_REPO}"
-    print(f"Credentials confirmed. The model will be loaded on Hugging Face Hub in '{repo_id}'.")
+    print(f"Credentials confirmed. The model will be pushed to Hugging Face Hub at '{repo_id}'.")
 else:
-    print("HF_TOKEN or HF_USERNAME not found. There will be no HF Hub push.")
+    print("HF_TOKEN or HF_USERNAME not found. Model will be saved locally.")
 
+
+def compute_metrics(eval_pred):
+    """
+    Compute metrics for evaluation during training.
+    
+    This function is passed to the `Trainer` and called at each evaluation step.
+    
+    Args:
+        eval_pred (tuple): A tuple containing model predictions (logits) and true labels.
+        
+    Returns:
+        dict: A dictionary of computed metrics (accuracy, f1, precision, recall).
+    """
+    logits, labels = eval_pred
+    # Get the predicted class by finding the index with the highest logit
+    predictions = np.argmax(logits, axis=-1)
+    
+    # Calculate metrics
+    precision, recall, f1, _ = precision_recall_fscore_support(labels, predictions, average='weighted')
+    acc = accuracy_score(labels, predictions)
+    
+    return {
+        'accuracy': acc,
+        'f1': f1,
+        'precision': precision,
+        'recall': recall
+    }
 
 def main():
-    print(f"Loading dataset '{DATASET_NAME}'...")
+    """
+    Main function to run the model fine-tuning and deployment pipeline.
+    """
+    
+    # Loading Dataset
+    print(f"Loading dataset '{DATASET_NAME}' with config '{DATASET_CONFIG}'...")
     dataset = load_dataset(DATASET_NAME, DATASET_CONFIG)
 
-
-    # Subset of 20.000 examples for train
+    # Preparing Data Subsets
+    # Shuffle and select a subset for training (20000 examples), a good balance between speed and quality.
     train_subset = dataset['train'].shuffle(seed=42).select(range(20000))
     
-    # entire validation dataset
+    # Use the entire validation dataset for robust evaluation
     validation_subset = dataset['validation'] 
-    print(f"Dataset divided in {len(train_subset)} training examples and {len(validation_subset)} validation examples.")
+    print(f"Dataset prepared: {len(train_subset)} training examples, {len(validation_subset)} validation examples.")
 
-    print(f"Loading '{BASE_MODEL}' tokenizer")
+    # Tokenization
+    print(f"Loading '{BASE_MODEL}' tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
 
     def tokenize_function(examples):
-        return tokenizer(examples['text'], padding="max_length", truncation=True)
+        """Tokenization function."""
 
+        # `truncation=True` 
+        return tokenizer(examples['text'], 
+                         padding="max_length", # pads all sentences to the same length.
+                         truncation=True)      # truncates sentences that are too long.
+
+    # Apply tokenization to the datasets using .map()
+    print("Tokenizing datasets...")
     tokenized_train_dataset = train_subset.map(tokenize_function, batched=True)
     tokenized_validation_dataset = validation_subset.map(tokenize_function, batched=True)
 
-    print(f"Loading pre-trained model '{BASE_MODEL}'...")
-    model = AutoModelForSequenceClassification.from_pretrained(BASE_MODEL, num_labels=3)
+    # Loading Model
+    print(f"Loading pre-trained model '{BASE_MODEL}' for fine-tuning...")
 
-    def compute_metrics(eval_pred):
-        logits, labels = eval_pred
-        predictions = np.argmax(logits, axis=-1)
-        precision, recall, f1, _ = precision_recall_fscore_support(labels, predictions, average='weighted')
-        acc = accuracy_score(labels, predictions)
-        return {
-            'accuracy': acc,
-            'f1': f1,
-            'precision': precision,
-            'recall': recall
-        }
+    model = AutoModelForSequenceClassification.from_pretrained(BASE_MODEL, 
+                                                               num_labels=3) # (positive, negative, neutral)
 
+    # Configure Training
     training_args = TrainingArguments(
-        output_dir="logs",
+        output_dir="logs",  # Directory to save logs and checkpoints
 
+        # Training Hyperparameters
         num_train_epochs=3,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
-        warmup_steps=500,
-        weight_decay=0.01,
+        warmup_steps=500,       # Number of steps to warm up the learning rate
+        weight_decay=0.01,      # Strength of weight decay regularization
+
+        # Logging and Saving
         logging_dir='./logs',
         logging_steps=10,
-        eval_strategy="epoch",
-        save_strategy="epoch", 
-        load_best_model_at_end=True,
-        save_total_limit=1,
-        metric_for_best_model="accuracy",
-        push_to_hub=push_to_hub_flag,
-        hub_token=HF_TOKEN,
-        hub_model_id=repo_id if push_to_hub_flag else None
+        eval_strategy="epoch",      # Run evaluation at the end of each epoch
+        save_strategy="epoch",      # Save a checkpoint at the end of each epoch
+        load_best_model_at_end=True, # Load the best model (based on metric) at the end
+        save_total_limit=1,         # Only keep the single best checkpoint
+        metric_for_best_model="accuracy", # Metric to determine the "best" model
+
+        # Hugging Face Hub Integration
+        push_to_hub=push_to_hub_flag, # Enable/disable push based on credentials
+        hub_token=HF_TOKEN,           # Pass the token to the trainer
+        hub_model_id=repo_id if push_to_hub_flag else None # Full repo name
     )
 
+    # Initialize Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=tokenized_train_dataset,
         eval_dataset=tokenized_validation_dataset,
-        compute_metrics=compute_metrics,
+        compute_metrics=compute_metrics, # Pass the metrics function
         tokenizer=tokenizer
     )
 
+    # Start Training
+    print("Starting model training...")
     trainer.train()
+    print("Training finished.")
 
+    # Save or Push Model 
     if push_to_hub_flag:
-        print(f"Uploading model on '{repo_id}'...")
+        print(f"Uploading model and tokenizer to '{repo_id}'...")
         trainer.push_to_hub()
-        print("Uploading completed")
+        print("Upload complete.")
     else:
-        print("Saving model on 'sentiment_model_for_hf' folder...")
+        # If not pushing, save the fine-tuned model locally
+        print("Saving model locally to 'sentiment_model_for_hf' folder...")
         trainer.save_model("sentiment_model_for_hf")
-        print("Model saved.")
+        print("Model saved locally.")
 
 
 if __name__ == "__main__":
     main()
-
