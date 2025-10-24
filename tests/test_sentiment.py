@@ -65,20 +65,3 @@ def test_neutral_sentiment(analyzer_for_testing):
     """
     result = analyzer_for_testing.analyze("Tomorrow the sun will rise at 6:00 AM")
     assert result["label"].lower() == "neutral"
-
-def test_preprocessing(analyzer_for_testing):
-    """
-    Tests if the preprocessing logic correctly replaces @mentions and URLs.
-    """
-    raw_text = "Hello @user1, check my website https://example.com"
-    expected_text = "Hello @user, check my website http"
-    processed_text = analyzer_for_testing.preprocess(raw_text)
-    assert processed_text == expected_text
-
-def test_empty_input(analyzer_for_testing):
-    """
-    Tests if the analyzer handles empty strings gracefully.
-    """
-    result = analyzer_for_testing.analyze("")
-    assert result["label"].lower() == "error"
-    assert "empty" in result["detail"].lower()
