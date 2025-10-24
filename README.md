@@ -1,3 +1,4 @@
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/flaaa31/demo-sentiment)
 # Online Reputation Monitoring
 
 This repository contains the source code for a complete MLOps project aimed at monitoring a company's online reputation through automated sentiment analysis of social media data.
