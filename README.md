@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://huggingface.co/spaces/flaaa31/demo-sentiment" target="_blank">
-    <img src="https://img.shields.io/badge/🔥_Live_Demo-Try_it_Online!-purple?style=for-the-badge&logo=huggingface" alt="Try the live demo!"/>
+    <img src="https://img.shields.io/badge/🔥_Live_Demo-Try_it!-purple?style=for-the-badge&logo=huggingface" alt="Try the live demo!"/>
   </a>
 </p>
 
