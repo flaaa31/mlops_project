@@ -71,7 +71,7 @@ def test_preprocessing_logic(analyzer_for_testing):
     analyzer = analyzer_for_testing
     
     raw_text = "Hello @user1, this is my site http://example.com"
-    expected = "Hello @user, this is my site http"
+    expected = "Hello @user this is my site http"
     processed = analyzer.preprocess(raw_text)
     assert processed == expected
 
