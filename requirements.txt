@@ -16,3 +16,4 @@ scikit-learn
 accelerate
 prometheus-fastapi-instrumentator
 prometheus-client
+httpx
