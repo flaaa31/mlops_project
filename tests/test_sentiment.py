@@ -65,3 +65,25 @@ def test_neutral_sentiment(analyzer_for_testing):
     """
     result = analyzer_for_testing.analyze("Tomorrow the sun will rise at 6:00 AM")
     assert result["label"].lower() == "neutral"
+    
+def test_preprocessing_logic(analyzer_for_testing):
+    """Tests if the preprocess method correctly replaces @mentions and URLs."""
+    analyzer = analyzer_for_testing
+    
+    raw_text = "Hello @user1, this is my site http://example.com"
+    expected = "Hello @user, this is my site http"
+    processed = analyzer.preprocess(raw_text)
+    assert processed == expected
+
+def test_empty_input(analyzer_for_testing):
+    """Tests how the analyzer handles an empty string."""
+    result = analyzer_for_testing.analyze("")
+    assert result["label"].lower() == "error"
+    assert "empty" in result["detail"].lower()
+
+def test_emoji_sentiment(analyzer_for_testing):
+    """Tests if the model can handle emojis (since it's trained on tweets)."""
+    result_pos = analyzer_for_testing.analyze("I love this! 😍")
+    result_neg = analyzer_for_testing.analyze("This is terrible 😡")
+    assert result_pos["label"].lower() == "positive"
+    assert result_neg["label"].lower() == "negative"
