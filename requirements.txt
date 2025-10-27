@@ -17,3 +17,4 @@ accelerate
 prometheus-fastapi-instrumentator
 prometheus-client
 httpx
+huggingface_hub

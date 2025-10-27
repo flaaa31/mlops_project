@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # 1. IL MODELLO DA VALIDARE:
 # Non usiamo il modello base, ma il TUO modello fine-tuned
-MODEL_TO_VALIDATE = "flaaa31/sentiment_model_for_hf"
+MODEL_TO_VALIDATE = "sentiment_model_local"
 
 # 2. SOGLIA DI PERFORMANCE:
 # Stabiliamo che il modello, per essere "accettato", deve avere

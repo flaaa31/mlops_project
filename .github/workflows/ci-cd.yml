@@ -1,23 +1,21 @@
 name: MLOps CI/CD Pipeline
 
 on:
-  # Trigger for fast tests (Continuous Integration)
-  # Activates at every pysh or pull request on main branch
+  # CI
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-  #  Manual trigger for fine tuning
+  # Manual trigger for CD
   workflow_dispatch:
 
-  # Scheduled Trigger for fine tuning once a week
+  # Scheduled trigger for CD 
   schedule:
-    # Every Sunday at 02:00 UTC
-    - cron: '0 2 * * 0'
+    - cron: '0 2 * * 0' # Every Sunday at 02:00 UTC
 
 jobs:
-  # job 1: tests with pytest
+  # JOB 1: CODE TESTING
   test:
     runs-on: ubuntu-latest
     steps:
@@ -31,35 +29,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Run tests
-        # MODIFICA QUI: Specifica quali test eseguire
+      - name: Run code unit and integration tests
         run: python -m pytest -v tests/test_sentiment.py tests/test_api.py
 
-  # job 2: fine tuning (only if job 1 succeded)
-  train-and-deploy:
+  # JOB 2: TRAINING
+  train:
+    # Only manual trigger or sceduled
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-    needs: test # it needs that job 1 works
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - name: Install dependencies for training
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run Training and Deploy Script
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_USERNAME: ${{ secrets.HF_USERNAME }}
-        run: python train.py
-
-  # job 3: model validation (only if job 2 succeded)
-  validate_model:
-    needs: train-and-deploy 
+    needs: test # Depending on job 1 success
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -72,8 +49,71 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          # Assicurati che 'httpx' sia in requirements.txt (l'abbiamo aggiunto prima)
+      - name: Run Training Script
+        run: python train.py
+      
+      - name: Upload model artifact
+        # Saving folder "sentiment_model_local" to pass it to the next job
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: sentiment_model_local/
+
+  # JOB 3: MODEL VALIDATION
+  validate:
+    needs: train # Depending on job 2 success
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt 
+          
+      - name: Download model artifact
+        # Loading folder "sentiment_model_local" from previous job
+        uses: actions/download-artifact@v4
+        with:
+          name: trained-model
+          path: sentiment_model_local/
+          
       - name: Run model validation test
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }} 
+        # Validation
         run: python -m pytest -v tests/test_validation.py
+
+  # JOB 4: DEPLOY
+  deploy:
+    needs: validate # Depending on job 3 success
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        # checkout to have deploy.py script
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Installing only deploy dependencies (huggingface_hub)
+          pip install -r requirements.txt
+          
+      - name: Download model artifact
+        # Downloading model
+        uses: actions/download-artifact@v4
+        with:
+          name: trained-model
+          path: sentiment_model_local/
+          
+      - name: Deploy to Hugging Face Hub
+        # Push to hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+        run: python deploy.py
