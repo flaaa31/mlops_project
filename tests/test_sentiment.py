@@ -1,22 +1,13 @@
 import sys, os
 import pytest
 
-# --- Python Path Modification ---
-# This line adds the project's root directory (the parent of 'tests/') to
-# the list of paths Python searches for modules.
-# This is necessary so that Python can find and import 'sentiment_analyzer'
-# from the parent directory.
+# adding the project's root directory to the list of paths Python searches for modules.
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the class to be tested
 from sentiment_analyzer import SentimentAnalyzer
 
-# --- Test Configuration ---
-# Define the model to use for testing.
-# We use the *original base model* from Hugging Face, not the fine-tuned one.
-# This makes the tests stable and independent of the training job.
-# We are testing the *logic* of the SentimentAnalyzer class (loading, preprocessing,
-# inference), not the *quality* of the fine-tuning.
+# Testing the "logic" of the SentimentAnalyzer class (loading, preprocessing, inference) using the original base model
 BASE_MODEL_FOR_TESTING = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 
 @pytest.fixture(scope="module")
@@ -82,7 +73,7 @@ def test_empty_input(analyzer_for_testing):
     assert "empty" in result["detail"].lower()
 
 def test_emoji_sentiment(analyzer_for_testing):
-    """Tests if the model can handle emojis (since it's trained on tweets)."""
+    """Tests if the model can handle emojis (since it's trained on tweets) without breaking."""
     result_pos = analyzer_for_testing.analyze("I love this! 😍")
     result_neg = analyzer_for_testing.analyze("This is terrible 😡")
     assert result_pos["label"].lower() == "positive"
