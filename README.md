@@ -87,7 +87,6 @@ docker-compose up -d
 - ```.github/workflows/ci-cd.yml```: Defines the CI/CD pipeline using GitHub Actions.
 - ```docker-compose.yml```: Configuration to launch Prometheus and Grafana.
 - ```prometheus.yml```: Configuration file for Prometheus. 
-- ```PROJECT_DOCUMENTATION.md```: Detailed project documentation.
 - ```.gitignore```: Specifies files to ignore (e.g., .venv, sentiment_model_local/).
 
 - ```requirements.txt```: List of Python dependencies.
