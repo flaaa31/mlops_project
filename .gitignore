@@ -1,68 +1,22 @@
---- ENVIRONMENTS ---
+__pycache__/
 .venv/
-venv/
-env/
-ENV/
-*.env
 
---- BYTECODE / CACHES ---
-__pycache__
-pycache/
-*.py[cod]
-*$py.class
+# folder created from train.py)
+sentiment_model_local/
 
---- JUPYTER / COLAB ---
-.ipynb_checkpoints/
-*.ipynb_out/
-
---- TEST / COVERAGE ---
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-
---- IDE / EDITOR FILES ---
-.vscode/
-.idea/
-*.swp
-*.swo
-
---- BUILD / DIST / PACKAGES ---
-build/
-dist/
-*.egg-info/
-*.egg
-
---- MODEL / DATA FILES ---
-*.pkl
-*.pt
-*.bin
-*.h5
-*.ckpt
-*.csv
-*.tsv
-*.jsonl
-data/
-models/
-outputs/
-
---- PROJECT SPECIFIC OUTPUTS ---
-sentiment_model_for_hf/
+# 2. Logs created from train.py
 logs/
-predictions_log.csv
 
---- DOCKER ---
-Ignora i file di override locali di Docker Compose e le cartelle di dati
-se non si usano i named volumes.
-docker-compose.override.yml
-.docker/
+# 3. Pytest cache
+.pytest_cache/
+
+# 4. Monitoring data
 prometheus_data/
 grafana_data/
 
---- SYSTEM FILES ---
-.DS_Store
-Thumbs.db
+# if one day we will use .env file instead of github secrets
+.env
+
+# Common IDE folders
+.vscode/
+.idea/

@@ -24,7 +24,7 @@ def deploy_to_hub():
     print(f"Destination repository: '{repo_id}'")
 
     # API Initialization
-    api = HfApi()
+    api = HfApi() # implicit search of hf_token
     
     # Loading folder
     api.upload_folder(
