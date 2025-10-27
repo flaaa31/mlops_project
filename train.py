@@ -12,22 +12,10 @@ BASE_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 DATASET_NAME = "tweet_eval"
 # Specific configuration of the dataset (sentiment analysis task)
 DATASET_CONFIG = "sentiment"
-# Name of the repository to create/update on Hugging Face Hub
-HF_REPO = "sentiment_model_for_hf"
+# Name of the trained model in local
+LOCAL_MODEL_OUTPUT_DIR = "sentiment_model_local"
 
-# HF CREDENTIALS
-HF_TOKEN = os.getenv("HF_TOKEN")
-HF_USERNAME = os.getenv("HF_USERNAME")
-
-# Flag to control whether to push to the Hub or save locally
-push_to_hub_flag = bool(HF_TOKEN and HF_USERNAME)
-repo_id = None 
-
-if push_to_hub_flag:
-    repo_id = f"{HF_USERNAME}/{HF_REPO}"
-    print(f"Credentials confirmed. The model will be pushed to Hugging Face Hub at '{repo_id}'.")
-else:
-    print("HF_TOKEN or HF_USERNAME not found. Model will be saved locally.")
+print(f"The model will be saved locally in: '{LOCAL_MODEL_OUTPUT_DIR}'.")
 
 
 def compute_metrics(eval_pred):
@@ -99,7 +87,7 @@ def main():
 
     # Configure Training
     training_args = TrainingArguments(
-        output_dir="logs",  # Directory to save logs and checkpoints
+        output_dir=LOCAL_MODEL_OUTPUT_DIR,  # Directory to save logs and checkpoints
 
         # Training Hyperparameters
         num_train_epochs=3,
@@ -116,11 +104,6 @@ def main():
         load_best_model_at_end=True, # Load the best model (based on metric) at the end
         save_total_limit=1,         # Only keep the single best checkpoint
         metric_for_best_model="accuracy", # Metric to determine the "best" model
-
-        # Hugging Face Hub Integration
-        push_to_hub=push_to_hub_flag, # Enable/disable push based on credentials
-        hub_token=HF_TOKEN,           # Pass the token to the trainer
-        hub_model_id=repo_id if push_to_hub_flag else None # Full repo name
     )
 
     # Initialize Trainer
@@ -137,17 +120,6 @@ def main():
     print("Starting model training...")
     trainer.train()
     print("Training finished.")
-
-    # Save or Push Model 
-    if push_to_hub_flag:
-        print(f"Uploading model and tokenizer to '{repo_id}'...")
-        trainer.push_to_hub()
-        print("Upload complete.")
-    else:
-        # If not pushing, save the fine-tuned model locally
-        print("Saving model locally to 'sentiment_model_for_hf' folder...")
-        trainer.save_model("sentiment_model_for_hf")
-        print("Model saved locally.")
 
 
 if __name__ == "__main__":
