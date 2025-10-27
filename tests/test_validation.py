@@ -68,7 +68,7 @@ def test_model_performance(validation_pipeline, test_dataset):
     label_map = {0: "negative", 1: "neutral", 2: "positive"}
     
     # Prepariamo i dati
-    texts = test_dataset["text"]
+    texts = list(test_dataset["text"]) 
     true_labels = [label_map[label] for label in test_dataset["label"]]
 
     # Eseguiamo le predizioni (in batch per velocità)
