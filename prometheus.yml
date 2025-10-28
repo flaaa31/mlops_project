@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 15s # Prometheus collects data every <scrape_interval> seconds
+  scrape_interval: 15s # Prometheus collects data every 15 seconds
 
 scrape_configs:
   - job_name: 'fastapi_app'
