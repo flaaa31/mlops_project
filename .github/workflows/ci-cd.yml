@@ -59,9 +59,9 @@ jobs:
           name: trained-model
           path: sentiment_model_local/
 
-  # JOB 3: MODEL VALIDATION
+# JOB 3: MODEL VALIDATION
   validate:
-    needs: train # Depending on job 2 success
+    needs: train
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -76,16 +76,18 @@ jobs:
           pip install -r requirements.txt 
           
       - name: Download model artifact
-        # Loading folder "sentiment_model_local" from previous job
         uses: actions/download-artifact@v4
         with:
           name: trained-model
           path: sentiment_model_local/
+
+      
+      - name: List downloaded model files
+        run: ls -la sentiment_model_local/
           
       - name: Run model validation test
-        # Validation
         run: python -m pytest -v tests/test_validation.py
-
+        
   # JOB 4: DEPLOY
   deploy:
     needs: validate # Depending on job 3 success
