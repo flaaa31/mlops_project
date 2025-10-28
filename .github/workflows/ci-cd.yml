@@ -61,7 +61,7 @@ jobs:
 
 # JOB 3: MODEL VALIDATION
   validate:
-    needs: train
+    needs: train # Depending on job 2 success
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -87,7 +87,7 @@ jobs:
           
       - name: Run model validation test
         run: python -m pytest -v tests/test_validation.py
-        
+
   # JOB 4: DEPLOY
   deploy:
     needs: validate # Depending on job 3 success
