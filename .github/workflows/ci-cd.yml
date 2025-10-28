@@ -53,11 +53,17 @@ jobs:
         run: python train.py
       
       - name: Upload model artifact
-        # Saving folder "sentiment_model_local" to pass it to the next job
         uses: actions/upload-artifact@v4
         with:
           name: trained-model
-          path: sentiment_model_local/
+          # Only files inside the folder, excluding subfolders like 'checkpoint-xxxx'
+          path: |
+            sentiment_model_local/*.json
+            sentiment_model_local/*.bin
+            sentiment_model_local/*.safetensors
+            sentiment_model_local/*token*
+            sentiment_model_local/special_tokens_map.json
+            sentiment_model_local/training_args.bin
 
 # JOB 3: MODEL VALIDATION
   validate:
