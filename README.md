@@ -13,28 +13,26 @@ The system implements a 4-stage CI/CD pipeline that ensures code quality, model 
 
 **2. CI: Model Training:** Runs on a schedule or manual trigger to train the model and save it as an artifact.
 
-**3. CI: Model Validation:** Tests the trained model artifact against a performance threshold (the "Quality Gate").
+**3. CI: Model Validation:** Tests the trained model artifact against a performance threshold ("Quality Gate").
 
-**4. CD: Conditional Deployment:** Only if the model passes validation, it is automatically deployed to the Hugging Face Hub.
+**4. CD: Conditional Deployment:** Only if model passes validation, it is automatically deployed to Hugging Face Hub.
 
 The final application is served via a FastAPI API (with a live demo) and includes a local monitoring stack using Prometheus and Grafana.
 
 ## CI/CD MLOps Workflow
-This project is built around a robust, multi-job workflow defined in .github/workflows/ci-cd.yml.
+This project is built around a multi-job workflow defined in .github/workflows/ci-cd.yml.
 
-Job 1: test → Job 2: train → Job 3: validate → Job 4: deploy
+Job 1 test (Code Quality): Runs on every push/PR. Executes fast unit tests (test_sentiment.py) and integration tests (test_api.py) to verify the code logic.
 
-test (Code Quality): Runs on every push/PR. Executes fast unit tests (test_sentiment.py) and integration tests (test_api.py) to verify the code logic.
+Job 2 train (Model Training): Runs on schedule or manually. Executes train.py to fine-tune the RoBERTa model and saves the output (e.g., sentiment_model_local/) as a temporary artifact.
 
-train (Model Training): Runs on schedule or manually. Executes train.py to fine-tune the RoBERTa model and saves the output (e.g., sentiment_model_local/) as a temporary artifact.
+Job 3 validate (Model Quality Gate): Runs test_validation.py on the artifact from the train job. This test fails the pipeline if the model's accuracy is below a set threshold (e.g., 70%).
 
-validate (Model Quality Gate): Runs test_validation.py on the artifact from the train job. This test fails the pipeline if the model's accuracy is below a set threshold (e.g., 70%).
-
-deploy (Conditional Deployment): Only runs if validate succeeds. Executes deploy.py to upload the validated model artifact to the Hugging Face Hub, updating the production model.
+Job 4 deploy (Conditional Deployment): Only runs if validate succeeds. Executes deploy.py to upload the validated model artifact to the Hugging Face Hub, updating the production model.
 
 
 ## Local Execution Guide
-To run the entire system in a local development environment (or a Codespace), follow these steps.
+To run the entire system in a local development environment (or a Codespace), follow these steps
 
 ### Prerequisites
 - Python 3.10+
@@ -68,6 +66,7 @@ The API will be accessible at ```http://127.0.0.1:8000```.
 
 ### 3. Launch the Monitoring System
 In a second terminal, start the Prometheus and Grafana containers.
+
 ```bash
 docker-compose up -d
 ```
@@ -87,6 +86,5 @@ docker-compose up -d
 - ```.github/workflows/ci-cd.yml```: Defines the CI/CD pipeline using GitHub Actions.
 - ```docker-compose.yml```: Configuration to launch Prometheus and Grafana.
 - ```prometheus.yml```: Configuration file for Prometheus. 
-- ```.gitignore```: Specifies files to ignore (e.g., .venv, sentiment_model_local/).
-
+- ```.gitignore```: Specifies files to ignore (e.g., .venv, sentiment_model_local/).  
 - ```requirements.txt```: List of Python dependencies.
