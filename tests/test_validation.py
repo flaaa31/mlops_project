@@ -9,42 +9,42 @@ import torch
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # --- Test Configuration ---
-MODEL_TO_VALIDATE = "./sentiment_model_local" # Percorso locale
+MODEL_TO_VALIDATE = "./sentiment_model_local" 
 MINIMUM_ACCURACY_THRESHOLD = 0.70
 
 @pytest.fixture(scope="module")
 def validation_pipeline():
     """
-    Fixture per caricare il modello fine-tuned UNA SOLA VOLTA.
-    Carichiamo ESPLICITAMENTE modello e tokenizer dal percorso locale.
+    Fixture to load the fine-tuned model once.
+    We load model and tokenizer from local path.
     """
     model_path = MODEL_TO_VALIDATE
     print(f"\n[Validation Fixture] Loading model and tokenizer explicitly from local path: {model_path}...")
     
     try:
-        # Carica prima il tokenizer dal percorso locale
+        # Loading tokenizer
         tokenizer = AutoTokenizer.from_pretrained(model_path)
-        # Poi carica il modello dal percorso locale
+        # Loading model
         model = AutoModelForSequenceClassification.from_pretrained(model_path)
         
         print("Model and tokenizer loaded successfully.")
         
-        # Determina il device (GPU se disponibile, altrimenti CPU)
+        # device selection
         device = 0 if torch.cuda.is_available() else -1
         print(f"Using device: {'cuda:0' if device == 0 else 'cpu'}")
 
-        # Crea la pipeline passando gli OGGETTI caricati
+        # Pipeline 
         pipe = pipeline(
             "text-classification",
-            model=model,       # <-- Passa l'oggetto modello
-            tokenizer=tokenizer, # <-- Passa l'oggetto tokenizer
+            model=model, 
+            tokenizer=tokenizer,
             device=device
         )
         return pipe
         
     except Exception as e:
         print(f"Error loading model/tokenizer from {model_path}: {e}")
-        # Aggiungiamo un po' di debug per vedere cosa c'è nella cartella
+        # Adding some debug if error occurs
         print(f"Contents of {model_path}:")
         try:
             print(os.listdir(model_path))
@@ -56,8 +56,7 @@ def validation_pipeline():
 @pytest.fixture(scope="module")
 def test_dataset():
     """
-    Fixture per caricare il "test set" di tweet_eval.
-    (Questa fixture rimane invariata)
+    Fixture to load "test set" of tweet_eval.
     """
     print("[Validation Fixture] Loading 'tweet_eval' test set...")
     dataset = load_dataset("tweet_eval", "sentiment", split="test")
@@ -67,14 +66,13 @@ def test_dataset():
 
 def test_model_performance(validation_pipeline, test_dataset):
     """
-    Il test di validazione vero e proprio.
-    (Questa funzione rimane invariata)
+    Validation test
     """
     pipe = validation_pipeline
     
     label_map = {0: "negative", 1: "neutral", 2: "positive"}
     
-    texts = list(test_dataset["text"]) # Già corretto
+    texts = list(test_dataset["text"])
     true_labels = [label_map[label] for label in test_dataset["label"]]
 
     print("Running predictions on test set...")
