@@ -52,18 +52,18 @@ jobs:
       - name: Run Training Script
         run: python train.py
       
+      - name: Find best checkpoint directory
+        # Identifica il nome della cartella del checkpoint migliore (es. checkpoint-3750)
+        # Assumiamo che sia l'unica sottocartella in sentiment_model_local
+        id: find_checkpoint
+        run: echo "BEST_CHECKPOINT_DIR=$(basename $(find sentiment_model_local -mindepth 1 -maxdepth 1 -type d -name 'checkpoint-*'))" >> $GITHUB_OUTPUT
+
       - name: Upload model artifact
         uses: actions/upload-artifact@v4
         with:
           name: trained-model
-          # Only files inside the folder, excluding subfolders like 'checkpoint-xxxx'
-          path: |
-            sentiment_model_local/*.json
-            sentiment_model_local/*.bin
-            sentiment_model_local/*.safetensors
-            sentiment_model_local/*token*
-            sentiment_model_local/special_tokens_map.json
-            sentiment_model_local/training_args.bin
+          # Carica il CONTENUTO della cartella del checkpoint migliore
+          path: sentiment_model_local/${{ steps.find_checkpoint.outputs.BEST_CHECKPOINT_DIR }}/
 
 # JOB 3: MODEL VALIDATION
   validate:
