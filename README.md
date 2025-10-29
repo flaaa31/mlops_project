@@ -19,6 +19,13 @@ The system implements a 4-stage CI/CD pipeline that ensures code quality, model 
 
 The final application is served via a FastAPI API (with a live demo) and includes a local monitoring stack using Prometheus and Grafana.
 
+## Demo App
+Here is a preview of the interactive web interface built with FastAPI. The UI provides contextual feedback based on user's review sentiment:
+
+| Positive Review (Green) | Neutral Review (Gray) | Negative Review (Red) |
+| :---: | :---: | :---: |
+| ![Demo of a positive review response](./screenshots/demo-app-positive.png) | ![Demo of a neutral review response](./screenshots/demo-app-neutral.png) | ![Demo of a negative review response](./screenshots/demo-app-negative.png) |
+
 ## CI/CD MLOps Workflow
 This project is built around a multi-job workflow defined in .github/workflows/ci-cd.yml.
 
