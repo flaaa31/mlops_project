@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: trained-model
-          path: sentiment_model_local/
+          path: sentiment_model_local/*
 
 # JOB 3: MODEL VALIDATION
   validate:
