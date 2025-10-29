@@ -120,6 +120,12 @@ def main():
     print("Starting model training...")
     trainer.train()
     print("Training finished.")
+    
+    # Saving final model
+    print(f"Saving final model to {LOCAL_MODEL_OUTPUT_DIR}...")
+    trainer.save_model(LOCAL_MODEL_OUTPUT_DIR)
+    tokenizer.save_pretrained(LOCAL_MODEL_OUTPUT_DIR)
+    print("Model and tokenizer saved successfully.")
 
 
 if __name__ == "__main__":
