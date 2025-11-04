@@ -91,6 +91,8 @@ docker-compose up -d
 - Grafana will be available at ```http://localhost:3000``` (default credentials: ```admin``` / ```admin```).
 
 ### Project Structure
+- `dashboard/`: Contains the JSON model for the Grafana dashboard for easy import.
+- `screenshot/`: Contains all the screenshots used in this file.
 - ```main.py```: The main file defining the FastAPI application and the user interface.
 - ```sentiment_analyzer.py```: Contains the logic for loading the model and performing sentiment analysis.
 - ```train.py```: Script for fine-tuning the model and deploying it to the Hugging Face Hub.
