@@ -1,9 +1,8 @@
 import sys, os
 import pytest
 
-# adding the project's root directory to the list of paths Python searches for modules.
+# Add the root directory to PYTHONPATH to resolve some import problems
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 # Import the class to be tested
 from sentiment_analyzer import SentimentAnalyzer
 
@@ -15,11 +14,8 @@ def analyzer_for_testing():
     """
     A pytest "fixture" to create a single instance of the SentimentAnalyzer.
     
-    - `@pytest.fixture`: Marks this function as a fixture.
-    - `scope="module"`: This fixture will run only ONCE for all tests in this
-      file. The same `analyzer` instance will be shared among all test functions.
-      This is critical because model loading (`__init__`) is very slow, and
-      we don't want to reload it for every single test.
+    Args:
+        scope="module": load model only once, in order to save time
       
     Returns:
         SentimentAnalyzer: An initialized instance of the analyzer.
@@ -54,11 +50,11 @@ def test_neutral_sentiment(analyzer_for_testing):
     Args:
         analyzer_for_testing (SentimentAnalyzer): The instance provided by the fixture.
     """
-    result = analyzer_for_testing.analyze("Tomorrow the sun will rise at 6:00 AM")
+    result = analyzer_for_testing.analyze("This service is normal")
     assert result["label"].lower() == "neutral"
     
 def test_preprocessing_logic(analyzer_for_testing):
-    """Tests if the preprocess method correctly replaces @mentions and URLs."""
+    """Tests if the preprocess method correctly replaces @mentions and URLs with generic ones."""
     analyzer = analyzer_for_testing
     
     raw_text = "Hello @user1, this is my site http://example.com"

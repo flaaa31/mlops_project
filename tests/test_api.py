@@ -24,7 +24,7 @@ def test_api_analyze_endpoint_positive():
     )
     data = response.json()
     assert response.status_code == 200 # Response == OK
-    assert data["label"].lower() == "positive" # predicted sentiment has to be positive
+    assert data["label"].lower() == "positive" # predicted sentiment has to be positive, bit we're checking the API here
 
 def test_api_analyze_endpoint_empty():
     """Tests how the API handles an empty request."""
