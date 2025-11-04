@@ -1,10 +1,8 @@
 import sys, os
-import pytest
 from fastapi.testclient import TestClient
 
-# Add the root directory to PYTHONPATH
+# Add the root directory to PYTHONPATH to resolve some import problems
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 # Import the FastAPI app instance from main.py
 from main import app 
 
@@ -14,9 +12,9 @@ client = TestClient(app)
 def test_api_root_endpoint():
     """Tests if the root endpoint '/' returns the HTML interface."""
     response = client.get("/")
-    assert response.status_code == 200
-    assert "text/html" in response.headers['content-type']
-    assert "Leave a Review" in response.text # Check for a keyword in your HTML
+    assert response.status_code == 200 # Response == OK
+    assert "text/html" in response.headers['content-type'] # Response type has to be a web page in html
+    assert "Leave a Review" in response.text # Check for a keyword that I'm sure it's in my HTML
 
 def test_api_analyze_endpoint_positive():
     """Tests the /analyze endpoint with a positive sentiment."""
@@ -25,8 +23,8 @@ def test_api_analyze_endpoint_positive():
         json={"text": "This is a wonderful product, I am so happy!"}
     )
     data = response.json()
-    assert response.status_code == 200
-    assert data["label"].lower() == "positive"
+    assert response.status_code == 200 # Response == OK
+    assert data["label"].lower() == "positive" # predicted sentiment has to be positive
 
 def test_api_analyze_endpoint_empty():
     """Tests how the API handles an empty request."""
@@ -35,8 +33,8 @@ def test_api_analyze_endpoint_empty():
         json={"text": ""} 
     )
     data = response.json()
-    assert response.status_code == 200
-    assert data["label"].lower() == "error"
+    assert response.status_code == 200 # Response == OK
+    assert data["label"].lower() == "error" # expected behaviour for empty inputs
 
 def test_api_analyze_bad_request():
     """Tests what happens if we send malformed JSON."""

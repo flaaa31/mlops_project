@@ -34,7 +34,7 @@ jobs:
 
   # JOB 2: TRAINING
   train:
-    # Only manual trigger or sceduled
+    # Only manual trigger or scheduled
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: test # Depending on job 1 success
     runs-on: ubuntu-latest
