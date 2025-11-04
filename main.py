@@ -141,15 +141,15 @@ app = FastAPI(
     redoc_url=None  # Disable Redoc
 )
 
-# Instantiate the analyzer.
-# the model is loaded once at startup, not on every request.
-analyzer = SentimentAnalyzer()
-
-# PROMETHEUS MONITORING
 
 # Instrument the FastAPI app with standard Prometheus metrics (latency, requests_total)
 # This also exposes the /metrics endpoint automatically
 Instrumentator().instrument(app).expose(app)
+
+# Instantiate the analyzer.
+# the model is loaded once at startup, not on every request.
+analyzer = SentimentAnalyzer()
+
 
 # Define a custom Prometheus metric
 # We want to count the *number* of predictions for each sentiment label.
