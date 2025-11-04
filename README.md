@@ -26,6 +26,15 @@ Here is a preview of the interactive web interface built with FastAPI. The UI pr
 | :---: | :---: | :---: |
 | ![Demo of a positive review response](./screenshots/demo-app-positive.png) | ![Demo of a neutral review response](./screenshots/demo-app-neutral.png) | ![Demo of a negative review response](./screenshots/demo-app-negative.png) |
 
+## Monitoring Dashboard
+The project includes a full monitoring stack using Prometheus and Grafana, launched via Docker Compose.
+
+A pre-built Grafana dashboard is available in the `dashboard/` folder. You can import it into Grafana to get an immediate overview of:
+* **API Health:** Request Rate (RPS), Latency (P95), and Error Rates.
+* **Model Performance:** The real-time distribution of "positive", "negative", and "neutral" predictions.
+
+![Screenshot of the Grafana Monitoring Dashboard](./screenshots/grafana-dashboard.png)
+
 ## CI/CD MLOps Workflow
 This project is built around a multi-job workflow defined in .github/workflows/ci-cd.yml.
 
