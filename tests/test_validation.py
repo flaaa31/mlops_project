@@ -1,23 +1,25 @@
 import sys, os
 import pytest
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline # Aggiungi AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from datasets import load_dataset
 from sklearn.metrics import accuracy_score
 import torch
 
-# --- Python Path Modification ---
+# Add the root directory to PYTHONPATH to resolve some import problems
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# --- Test Configuration ---
+# Model name
 MODEL_TO_VALIDATE = "./sentiment_model_local" 
+
+# Minimum accuracy
 MINIMUM_ACCURACY_THRESHOLD = 0.70
 
 @pytest.fixture(scope="module")
 def validation_pipeline():
     """
-    Fixture to load the fine-tuned model once.
-    We load model and tokenizer from local path.
+    Fixture to load the fine-tuned model once (scope='module').
     """
+
     model_path = MODEL_TO_VALIDATE
     print(f"\n[Validation Fixture] Loading model and tokenizer explicitly from local path: {model_path}...")
     
@@ -67,6 +69,10 @@ def test_dataset():
 def test_model_performance(validation_pipeline, test_dataset):
     """
     Validation test
+
+    Args:
+        validation_pipeline: initialized Hugging Face pipeline (loaded with the fine-tuned model) provided by the fixture.
+        test_dataset: 'tweet_eval' test dataset provided by the fixture.
     """
     pipe = validation_pipeline
     
