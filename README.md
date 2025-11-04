@@ -29,7 +29,16 @@ Here is a preview of the interactive web interface built with FastAPI. The UI pr
 ## Monitoring Dashboard
 The project includes a full monitoring stack using Prometheus and Grafana, launched via Docker Compose.
 
-A pre-built Grafana dashboard is available in the `dashboard/` folder. You can import it into Grafana to get an immediate overview of:
+A pre-built Grafana dashboard is available in the `dashboard/` folder. 
+
+### How to Import the Dashboard
+1.  Navigate to Grafana at `http://localhost:3000` (after running `docker-compose up -d`) and log in (default credentials: `admin` / `admin`).
+2.  On the left-hand menu, click on the **Dashboards** icon (four squares) and then click **New** and **"Import"**.
+3.  Click **"Upload dashoard JSON file"** and select the `.json` file located in the `dashboard/` folder of this project.
+4.  On the next screen, at the bottom, you **must select your "Prometheus" data source** from the dropdown menu.
+5.  Click **"Import"**.
+
+Once imported, the dashboard will give you an immediate overview of:
 * **API Health:** Request Rate (RPS), Latency (P95), and Error Rates.
 * **Model Performance:** The real-time distribution of "positive", "negative", and "neutral" predictions.
 
