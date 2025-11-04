@@ -137,8 +137,8 @@ app = FastAPI(
     title="Sentiment Analysis API",
     description="An API to analyze the sentiment of text using a RoBERTa model.",
     version="1.0.0",
-    docs_url="/docs", # URL for Swagger UI
-    redoc_url=None  # Disable Redoc
+    docs_url="/docs", # URL for Swagger UI documentation
+    redoc_url=None  # Disable Redoc alternative documentation
 )
 
 

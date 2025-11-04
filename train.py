@@ -69,7 +69,6 @@ def main():
     def tokenize_function(examples):
         """Tokenization function."""
 
-        # `truncation=True` 
         return tokenizer(examples['text'], 
                          padding="max_length", # pads all sentences to the same length.
                          truncation=True)      # truncates sentences that are too long.
