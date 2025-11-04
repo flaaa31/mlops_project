@@ -144,7 +144,7 @@ app = FastAPI(
 
 # Instrument the FastAPI app with standard Prometheus metrics (latency, requests_total)
 # This also exposes the /metrics endpoint automatically
-Instrumentator().instrument(app).expose(app)
+Instrumentator(should_instrument_requests=True).instrument(app).expose(app)
 
 # Instantiate the analyzer.
 # the model is loaded once at startup, not on every request.
